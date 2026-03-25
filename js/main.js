@@ -303,6 +303,31 @@ function spawnBlood(enemy, count = 6, spread = 1) {
   }
 }
 
+function spawnZombieParts(enemy, severe = false, damage = 0) {
+  const parts = severe ? ["arm", "arm", "chunk", "chunk", "head"] : ["arm", "chunk"];
+  const partCount = severe ? 4 : (damage >= 18 ? 2 : 1);
+  for (let index = 0; index < partCount; index += 1) {
+    const kind = parts[Math.floor(Math.random() * parts.length)];
+    const life = 0.7 + Math.random() * 0.55;
+    game.particles.push({
+      x: enemy.x - 10 + Math.random() * 22,
+      y: enemy.y - 26 + Math.random() * 32,
+      vx: -30 - Math.random() * 110,
+      vy: -120 + Math.random() * 110,
+      gravity: 240,
+      life,
+      maxLife: life,
+      alpha: 1,
+      size: kind === "head" ? 10 : kind === "arm" ? 8 : 6,
+      shrink: 0.35,
+      rotation: Math.random() * Math.PI * 2,
+      spin: -8 + Math.random() * 16,
+      color: kind === "chunk" ? "#7f4f31" : enemy.skinTone || "#8e9b78",
+      kind
+    });
+  }
+}
+
 function spawnSparks(x, y, count = 8) {
   for (let index = 0; index < count; index += 1) {
     const life = 0.22 + Math.random() * 0.2;
@@ -332,12 +357,39 @@ function draw() {
 
 function drawBackground(ctx) {
   const sky = ctx.createLinearGradient(0, 0, 0, game.canvas.height);
-  sky.addColorStop(0, "#bde4ff");
-  sky.addColorStop(0.28, "#e8f7d0");
-  sky.addColorStop(0.76, "#7bb84a");
-  sky.addColorStop(1, "#5f8839");
+  sky.addColorStop(0, "#f7c98e");
+  sky.addColorStop(0.2, "#f4de9f");
+  sky.addColorStop(0.42, "#d7df9b");
+  sky.addColorStop(0.76, "#86b351");
+  sky.addColorStop(1, "#597c37");
   ctx.fillStyle = sky;
   ctx.fillRect(0, 0, game.canvas.width, game.canvas.height);
+
+  const sunX = game.grid.left + game.grid.width * 0.64;
+  const sunY = game.grid.top - 6;
+  const sunGlow = ctx.createRadialGradient(sunX, sunY, 8, sunX, sunY, 120);
+  sunGlow.addColorStop(0, "rgba(255, 238, 140, 0.95)");
+  sunGlow.addColorStop(0.4, "rgba(255, 190, 88, 0.48)");
+  sunGlow.addColorStop(1, "rgba(255, 160, 68, 0)");
+  ctx.fillStyle = sunGlow;
+  ctx.beginPath();
+  ctx.arc(sunX, sunY, 120, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "#ffd25f";
+  ctx.beginPath();
+  ctx.arc(sunX, sunY, 20, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "rgba(255, 230, 146, 0.55)";
+  ctx.lineWidth = 3;
+  for (let ray = 0; ray < 10; ray += 1) {
+    const angle = (Math.PI * 2 * ray) / 10;
+    ctx.beginPath();
+    ctx.moveTo(sunX + Math.cos(angle) * 26, sunY + Math.sin(angle) * 26);
+    ctx.lineTo(sunX + Math.cos(angle) * 40, sunY + Math.sin(angle) * 40);
+    ctx.stroke();
+  }
+
   drawCloud(ctx, 170, 85, 1.2);
   drawCloud(ctx, 470, 118, 0.95);
   drawCloud(ctx, 920, 88, 1.1);
@@ -408,35 +460,132 @@ function drawDriveway(ctx) {
 }
 
 function drawHouse(ctx) {
-  const houseX = game.grid.left - 154;
-  const houseY = game.grid.top + game.grid.height * 0.37;
-  ctx.fillStyle = "#f1d9aa";
-  ctx.fillRect(houseX, houseY - 86, 110, 86);
-  ctx.fillStyle = "#a5502d";
+  const towerX = game.grid.left - 108;
+  const towerY = game.grid.top - 8;
+  const towerWidth = 82;
+  const towerHeight = game.grid.height + 36;
+
+  const brickColors = ["#8e633e", "#a2774f", "#6d4a30", "#b18860"];
+  const brickW = 22;
+  const brickH = 18;
+
+  ctx.fillStyle = "#4d311c";
+  ctx.fillRect(towerX - 4, towerY - 6, towerWidth + 8, towerHeight + 10);
+
+  for (let row = 0; row < Math.ceil(towerHeight / brickH); row += 1) {
+    for (let col = 0; col < Math.ceil(towerWidth / brickW) + 1; col += 1) {
+      const x = towerX + col * brickW - (row % 2) * 11;
+      const y = towerY + row * brickH;
+      ctx.fillStyle = brickColors[(row + col) % brickColors.length];
+      ctx.fillRect(x, y, brickW - 2, brickH - 2);
+    }
+  }
+
+  ctx.strokeStyle = "rgba(55, 34, 19, 0.55)";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(towerX, towerY, towerWidth, towerHeight);
+
+  const annexX = towerX - 54;
+  const annexY = game.grid.top + game.cellHeight * 0.92;
+  const annexW = 58;
+  const annexH = 78;
+
+  ctx.fillStyle = "#d8bc8e";
+  ctx.fillRect(annexX, annexY, annexW, annexH);
+  ctx.strokeStyle = "#5b3d21";
+  ctx.strokeRect(annexX, annexY, annexW, annexH);
+
+  ctx.fillStyle = "#7a5330";
   ctx.beginPath();
-  ctx.moveTo(houseX - 12, houseY - 86);
-  ctx.lineTo(houseX + 55, houseY - 136);
-  ctx.lineTo(houseX + 122, houseY - 86);
+  ctx.moveTo(annexX - 8, annexY + 8);
+  ctx.lineTo(annexX + annexW / 2, annexY - 22);
+  ctx.lineTo(annexX + annexW + 8, annexY + 8);
   ctx.closePath();
   ctx.fill();
-  ctx.fillStyle = "#684121";
-  ctx.fillRect(houseX + 44, houseY - 38, 24, 38);
-  ctx.fillStyle = "#acd6f4";
-  ctx.fillRect(houseX + 14, houseY - 66, 22, 22);
-  ctx.fillRect(houseX + 73, houseY - 66, 22, 22);
-  ctx.fillStyle = "#5f8f30";
-  ctx.fillRect(houseX + 36, houseY - 120, 38, 10);
+
+  ctx.strokeStyle = "rgba(255, 225, 170, 0.2)";
+  for (let tile = 0; tile < 5; tile += 1) {
+    ctx.beginPath();
+    ctx.moveTo(annexX + 4 + tile * 11, annexY + 2);
+    ctx.lineTo(annexX + 14 + tile * 11, annexY + 12);
+    ctx.stroke();
+  }
+
+  ctx.fillStyle = "#acd2ea";
+  ctx.fillRect(annexX + 8, annexY + 22, 12, 16);
+  ctx.fillRect(annexX + 34, annexY + 22, 12, 16);
+  ctx.strokeStyle = "#4f341c";
+  ctx.strokeRect(annexX + 8, annexY + 22, 12, 16);
+  ctx.strokeRect(annexX + 34, annexY + 22, 12, 16);
+  ctx.beginPath();
+  ctx.moveTo(annexX + 14, annexY + 22);
+  ctx.lineTo(annexX + 14, annexY + 38);
+  ctx.moveTo(annexX + 8, annexY + 30);
+  ctx.lineTo(annexX + 20, annexY + 30);
+  ctx.moveTo(annexX + 40, annexY + 22);
+  ctx.lineTo(annexX + 40, annexY + 38);
+  ctx.moveTo(annexX + 34, annexY + 30);
+  ctx.lineTo(annexX + 46, annexY + 30);
+  ctx.stroke();
+
+  ctx.fillStyle = "#674222";
+  ctx.fillRect(annexX + 21, annexY + 48, 14, 30);
+  ctx.strokeRect(annexX + 21, annexY + 48, 14, 30);
+
+  ctx.fillStyle = "#d8c6a2";
+  ctx.beginPath();
+  ctx.moveTo(towerX - 20, game.grid.top + game.grid.height + 18);
+  ctx.lineTo(towerX + 20, game.grid.top + game.grid.height - 6);
+  ctx.lineTo(towerX + 20, game.grid.top + game.grid.height + 40);
+  ctx.lineTo(towerX - 20, game.grid.top + game.grid.height + 40);
+  ctx.closePath();
+  ctx.fill();
+
+  for (let row = 0; row < game.grid.rows; row += 1) {
+    const centerY = getLaneCenter(row);
+    const bayX = towerX + 8;
+    const bayY = centerY - 31;
+
+    ctx.fillStyle = "#6d4727";
+    ctx.beginPath();
+    ctx.moveTo(bayX + 8, bayY + 4);
+    ctx.lineTo(bayX + 50, bayY + 4);
+    ctx.lineTo(bayX + 60, bayY + 14);
+    ctx.lineTo(bayX + 60, bayY + 50);
+    ctx.lineTo(bayX, bayY + 50);
+    ctx.lineTo(bayX, bayY + 14);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = "#8f6238";
+    ctx.beginPath();
+    ctx.moveTo(bayX + 4, bayY + 2);
+    ctx.lineTo(bayX + 46, bayY + 2);
+    ctx.lineTo(bayX + 56, bayY + 12);
+    ctx.lineTo(bayX + 56, bayY + 46);
+    ctx.lineTo(bayX + 4, bayY + 46);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = "rgba(56, 35, 19, 0.45)";
+    ctx.stroke();
+
+    ctx.strokeStyle = "rgba(255, 223, 172, 0.14)";
+    for (let plank = 0; plank < 4; plank += 1) {
+      ctx.beginPath();
+      ctx.moveTo(bayX + 8, bayY + 10 + plank * 9);
+      ctx.lineTo(bayX + 50, bayY + 10 + plank * 9);
+      ctx.stroke();
+    }
+  }
 }
 
 function drawFence(ctx) {
-  const startX = game.grid.left - 20;
-  for (let row = 0; row < game.grid.rows; row += 1) {
-    const y = getLaneCenter(row) + game.cellHeight * 0.24;
-    ctx.fillStyle = "#936035";
-    for (let index = 0; index < 4; index += 1) ctx.fillRect(startX + index * 9, y - 24, 5, 32);
-    ctx.fillRect(startX - 2, y - 18, 38, 4);
-    ctx.fillRect(startX - 2, y - 5, 38, 4);
-  }
+  const seamX = game.grid.left - 10;
+  ctx.fillStyle = "#7f6137";
+  ctx.fillRect(seamX, game.grid.top - 4, 10, game.grid.height + 8);
+  ctx.fillStyle = "rgba(255, 231, 185, 0.16)";
+  ctx.fillRect(seamX + 2, game.grid.top - 2, 2, game.grid.height + 4);
 }
 
 function drawRightHedge(ctx) {
@@ -518,39 +667,43 @@ function drawMowers(ctx) {
   game.mowers.forEach((mower) => {
     if (!mower.active) return;
     ctx.save();
-    ctx.translate(mower.x, mower.y + 8);
+    ctx.translate(mower.x - 4, mower.y + 6);
     ctx.fillStyle = "rgba(0,0,0,0.18)";
     ctx.beginPath();
-    ctx.ellipse(0, 20, 26, 8, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 18, 22, 7, 0, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = "#cb352f";
+
+    ctx.fillStyle = "#c6372d";
     ctx.beginPath();
-    ctx.roundRect(-24, -8, 38, 22, 8);
+    ctx.roundRect(-18, -4, 34, 18, 6);
     ctx.fill();
-    ctx.fillStyle = "#434a57";
-    ctx.fillRect(-6, -16, 8, 16);
-    ctx.fillRect(6, -22, 5, 18);
-    ctx.strokeStyle = "#2b2f36";
-    ctx.lineWidth = 4;
+
+    ctx.fillStyle = "#5e646e";
+    ctx.fillRect(-4, -10, 8, 10);
+    ctx.strokeStyle = "#343941";
+    ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.moveTo(8, -18);
-    ctx.lineTo(25, -28);
+    ctx.moveTo(8, -10);
+    ctx.lineTo(18, -18);
     ctx.stroke();
-    ctx.fillStyle = "#f0f3f7";
-    ctx.fillRect(10, -30, 10, 5);
+
+    ctx.fillStyle = "#edf3f7";
+    ctx.fillRect(12, -20, 7, 4);
+
     ctx.save();
-    ctx.translate(-8, 10);
+    ctx.translate(-8, 9);
     ctx.rotate(mower.spin);
-    ctx.fillStyle = "#cfd9e4";
+    ctx.fillStyle = "#d7e0e7";
     for (let blade = 0; blade < 4; blade += 1) {
       ctx.rotate(Math.PI / 2);
-      ctx.fillRect(-2, -12, 4, 24);
+      ctx.fillRect(-1.5, -9, 3, 18);
     }
     ctx.restore();
-    ctx.fillStyle = "#1f2328";
+
+    ctx.fillStyle = "#22262b";
     ctx.beginPath();
-    ctx.arc(-16, 16, 7, 0, Math.PI * 2);
-    ctx.arc(10, 16, 7, 0, Math.PI * 2);
+    ctx.arc(-11, 15, 5.5, 0, Math.PI * 2);
+    ctx.arc(9, 15, 5.5, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
   });
@@ -586,6 +739,23 @@ function drawParticles(ctx) {
       ctx.beginPath();
       ctx.ellipse(0, 0, particle.size, particle.size * 0.7, 0, 0, Math.PI * 2);
       ctx.fill();
+    } else if (particle.kind === "arm") {
+      ctx.fillRect(-particle.size * 0.55, -particle.size * 0.18, particle.size * 1.1, particle.size * 0.36);
+      ctx.beginPath();
+      ctx.arc(particle.size * 0.55, 0, particle.size * 0.22, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (particle.kind === "head") {
+      ctx.beginPath();
+      ctx.ellipse(0, 0, particle.size * 0.7, particle.size * 0.85, 0, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (particle.kind === "chunk") {
+      ctx.beginPath();
+      ctx.moveTo(-particle.size * 0.6, -particle.size * 0.2);
+      ctx.lineTo(particle.size * 0.5, -particle.size * 0.45);
+      ctx.lineTo(particle.size * 0.65, particle.size * 0.4);
+      ctx.lineTo(-particle.size * 0.45, particle.size * 0.55);
+      ctx.closePath();
+      ctx.fill();
     } else {
       ctx.fillRect(-particle.size * 0.4, -particle.size * 0.4, particle.size, particle.size * 0.6);
     }
@@ -595,19 +765,68 @@ function drawParticles(ctx) {
 
 function drawLaneLabels(ctx) {
   ctx.save();
-  ctx.fillStyle = "rgba(18, 17, 14, 0.72)";
-  ctx.font = "bold 14px Trebuchet MS";
+
+  for (let row = 0; row < game.grid.rows; row += 1) {
+    const centerY = getLaneCenter(row);
+    const signX = game.grid.left - 132;
+    const signY = centerY - 12;
+
+    ctx.fillStyle = "#a48354";
+    ctx.beginPath();
+    ctx.roundRect(signX, signY, 58, 24, 6);
+    ctx.fill();
+    ctx.strokeStyle = "#5b3d21";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.fillStyle = "#2f2214";
+    ctx.font = "bold 13px Trebuchet MS";
+    ctx.textAlign = "center";
+    ctx.fillText(`Lane ${row + 1}`, signX + 29, centerY + 4);
+  }
+
+  const boardWidth = 210;
+  const boardHeight = 56;
+  const boardX = game.grid.left + game.grid.width - boardWidth - 6;
+  const boardY = game.grid.top - 68;
+
+  ctx.fillStyle = "#775130";
+  ctx.beginPath();
+  ctx.roundRect(boardX, boardY, boardWidth, boardHeight, 9);
+  ctx.fill();
+  ctx.strokeStyle = "#4f341c";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  ctx.fillStyle = "#2b2419";
+  ctx.beginPath();
+  ctx.roundRect(boardX + 12, boardY + 8, 94, 24, 6);
+  ctx.fill();
+
+  const minutes = String(Math.floor(game.totalTime / 60)).padStart(2, "0");
+  const seconds = String(Math.floor(game.totalTime % 60)).padStart(2, "0");
+  const tenths = String(Math.floor((game.totalTime % 1) * 10));
+
+  ctx.fillStyle = "#d6a95b";
+  ctx.font = "bold 20px monospace";
   ctx.textAlign = "left";
-  for (let row = 0; row < game.grid.rows; row += 1) ctx.fillText(`Lane ${row + 1}`, 22, getLaneCenter(row) + 5);
+  ctx.fillText(`${minutes}:${seconds}:${tenths}`, boardX + 20, boardY + 26);
+
+  ctx.fillStyle = "#f3e2bc";
+  ctx.font = "bold 14px Trebuchet MS";
+  ctx.textAlign = "center";
+  ctx.fillText("Wave Timer", boardX + 156, boardY + 25);
+
+  ctx.font = "bold 16px Trebuchet MS";
+  ctx.fillText(`Next wave in ${Math.ceil(game.waveTimer)}s`, boardX + boardWidth / 2, boardY + 47);
+
   if (game.scareTimer > 0) {
     ctx.fillStyle = "#fff6de";
     ctx.font = "bold 18px Trebuchet MS";
-    ctx.fillText("Crow Call Active", game.grid.left, game.grid.top - 22);
+    ctx.textAlign = "left";
+    ctx.fillText("Crow Call Active", game.grid.left, game.grid.top - 26);
   }
-  ctx.textAlign = "right";
-  ctx.fillStyle = "rgba(22, 20, 15, 0.82)";
-  ctx.font = "bold 16px Trebuchet MS";
-  ctx.fillText(`Next wave in ${Math.ceil(game.waveTimer)}s`, game.grid.left + game.grid.width, game.grid.top - 18);
+
   ctx.restore();
 }
 
@@ -867,6 +1086,13 @@ game.findProjectileTarget = findProjectileTarget;
 game.spawnSun = spawnSun;
 game.playSound = playSound;
 game.spawnBlood = spawnBlood;
+game.spawnZombieParts = spawnZombieParts;
 
 window.addEventListener("load", setup);
+
+
+
+
+
+
 

@@ -23,6 +23,8 @@
     this.jacket = ["#60432d", "#694932", "#57402c"][Math.floor(Math.random() * 3)];
     this.tie = ["#b7372a", "#af2020", "#9f3d18"][Math.floor(Math.random() * 3)];
     this.pants = ["#4b5e88", "#40537d", "#53658a"][Math.floor(Math.random() * 3)];
+    this.leftArmLost = false;
+    this.rightArmLost = false;
     this.fsm = new FiniteStateMachine(this, "SPAWN");
     this.setupStates();
   }
@@ -149,6 +151,8 @@
             if (enemy.respawnsRemaining > 0) {
               enemy.respawnsRemaining -= 1;
               enemy.health = Math.round(enemy.maxHealth * 0.55);
+              enemy.leftArmLost = false;
+              enemy.rightArmLost = false;
               enemy.fsm.setState("RESPAWN", game);
             } else {
               enemy.removed = true;
@@ -187,7 +191,14 @@
     if (this.fsm.matches("DEAD")) {
       return;
     }
+    const previousHealth = this.health;
     this.health = Math.max(0, this.health - amount);
+    if (!this.leftArmLost && previousHealth > this.maxHealth * 0.72 && this.health <= this.maxHealth * 0.72) {
+      this.leftArmLost = true;
+    }
+    if (!this.rightArmLost && previousHealth > this.maxHealth * 0.38 && this.health <= this.maxHealth * 0.38) {
+      this.rightArmLost = true;
+    }
   }
 
   shouldFlee(game) {
@@ -237,10 +248,14 @@
     ctx.lineCap = "round";
     ctx.lineWidth = 9;
     ctx.beginPath();
-    ctx.moveTo(-12, -2);
-    ctx.lineTo(-27, 13 + armSwing);
-    ctx.moveTo(11, 1);
-    ctx.lineTo(26, 16 - forearmSwing);
+    if (!this.leftArmLost) {
+      ctx.moveTo(-12, -2);
+      ctx.lineTo(-27, 13 + armSwing);
+    }
+    if (!this.rightArmLost) {
+      ctx.moveTo(11, 1);
+      ctx.lineTo(26, 16 - forearmSwing);
+    }
     ctx.stroke();
 
     ctx.fillStyle = jacket;

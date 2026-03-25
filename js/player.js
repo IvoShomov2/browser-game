@@ -323,17 +323,21 @@ class Projectile {
 
   update(game, deltaTime) {
     this.trail.push({ x: this.x, y: this.y, age: 1 });
-    this.trail = this.trail.slice(-6).map((point) => ({ ...point, age: point.age - 0.16 }));
+    this.trail = this.trail.slice(-8).map((point) => ({ ...point, age: point.age - 0.12 }));
     this.x += this.speed * deltaTime;
     this.spin += deltaTime * 10;
 
     const target = game.findProjectileTarget(this);
     if (target) {
+      const wasAliveHealth = target.health;
       target.takeDamage(this.damage);
       target.hitFlash = 0.25;
       this.active = false;
       if (game.spawnBlood) {
         game.spawnBlood(target, 5, 1);
+      }
+      if (game.spawnZombieParts) {
+        game.spawnZombieParts(target, target.health <= 0 || this.damage >= wasAliveHealth, this.damage);
       }
       game.score += 4;
       game.playSound("impact");
@@ -348,23 +352,35 @@ class Projectile {
     ctx.save();
 
     this.trail.forEach((point, index) => {
-      ctx.fillStyle = `rgba(147, 255, 118, ${Math.max(0, point.age * 0.18)})`;
+      ctx.fillStyle = `rgba(188, 255, 88, ${Math.max(0, point.age * 0.16)})`;
       ctx.beginPath();
-      ctx.arc(point.x, point.y, this.radius - index * 0.9, 0, Math.PI * 2);
+      ctx.ellipse(point.x, point.y, this.radius + 10 - index * 1.3, Math.max(1.5, this.radius * 0.7 - index * 0.4), 0, 0, Math.PI * 2);
       ctx.fill();
     });
+
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    const glow = ctx.createRadialGradient(0, 0, 2, 0, 0, this.radius + 18);
+    glow.addColorStop(0, "rgba(239,255,165,0.95)");
+    glow.addColorStop(0.3, "rgba(189,255,93,0.8)");
+    glow.addColorStop(1, "rgba(149,255,69,0)");
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(0, 0, this.radius + 16, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
 
     ctx.translate(this.x, this.y);
     ctx.rotate(this.spin);
     const gradient = ctx.createRadialGradient(-2, -2, 2, 0, 0, this.radius + 2);
-    gradient.addColorStop(0, "#e5ffbc");
-    gradient.addColorStop(1, "#67bf36");
+    gradient.addColorStop(0, "#f4ffbf");
+    gradient.addColorStop(1, "#7fd638");
     ctx.fillStyle = gradient;
     ctx.beginPath();
     ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.strokeStyle = "rgba(255,255,255,0.3)";
+    ctx.strokeStyle = "rgba(255,255,255,0.42)";
     ctx.lineWidth = 1.5;
     ctx.beginPath();
     ctx.arc(0, 0, this.radius - 1.5, -1.2, 0.7);
@@ -410,17 +426,27 @@ class SunToken {
 
   draw(ctx, totalTime) {
     const pulse = Math.sin(totalTime * 4 + this.floatOffset) * 3;
+    const glowSize = this.radius + 18 + Math.sin(totalTime * 5 + this.floatOffset) * 5;
 
     ctx.save();
     ctx.translate(this.x, this.y + pulse);
 
-    for (let index = 0; index < 10; index += 1) {
-      const angle = (Math.PI * 2 * index) / 10;
-      ctx.strokeStyle = "rgba(255, 217, 102, 0.45)";
+    const outerGlow = ctx.createRadialGradient(0, 0, 2, 0, 0, glowSize);
+    outerGlow.addColorStop(0, "rgba(255, 247, 178, 0.95)");
+    outerGlow.addColorStop(0.4, "rgba(255, 208, 74, 0.65)");
+    outerGlow.addColorStop(1, "rgba(255, 185, 52, 0)");
+    ctx.fillStyle = outerGlow;
+    ctx.beginPath();
+    ctx.arc(0, 0, glowSize, 0, Math.PI * 2);
+    ctx.fill();
+
+    for (let index = 0; index < 12; index += 1) {
+      const angle = (Math.PI * 2 * index) / 12;
+      ctx.strokeStyle = "rgba(255, 219, 101, 0.55)";
       ctx.lineWidth = 3;
       ctx.beginPath();
       ctx.moveTo(Math.cos(angle) * 18, Math.sin(angle) * 18);
-      ctx.lineTo(Math.cos(angle) * 28, Math.sin(angle) * 28);
+      ctx.lineTo(Math.cos(angle) * 32, Math.sin(angle) * 32);
       ctx.stroke();
     }
 
