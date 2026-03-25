@@ -111,8 +111,8 @@ function bindEvents() {
 function resizeCanvas() {
   game.canvas.width = window.innerWidth;
   game.canvas.height = window.innerHeight;
-  const sidebarWidth = window.innerWidth > 980 ? 310 : 0;
-  game.grid.left = Math.max(72, window.innerWidth * 0.12);
+  const sidebarWidth = window.innerWidth > 980 ? 274 : 0;
+  game.grid.left = Math.max(76, window.innerWidth * 0.125);
   game.grid.top = Math.max(124, window.innerHeight * 0.18);
   game.grid.width = Math.min(window.innerWidth - game.grid.left - Math.max(32, sidebarWidth), 960) * game.zoom;
   game.grid.height = Math.min(window.innerHeight - game.grid.top - 82, 530) * game.zoom;
@@ -123,14 +123,14 @@ function resizeCanvas() {
 }
 
 function createMower(row) {
-  return { row, x: game.grid.left - 58, y: getLaneCenter(row), active: true, triggered: false, speed: 0, width: 62, height: 34, spin: 0, sparkTimer: 0 };
+  return { row, x: game.grid.left - 42, y: getLaneCenter(row), active: true, triggered: false, speed: 0, width: 62, height: 34, spin: 0, sparkTimer: 0 };
 }
 
 function alignLaneMowers() {
   game.mowers.forEach((mower, row) => {
     mower.row = row;
     mower.y = getLaneCenter(row);
-    if (!mower.triggered) mower.x = game.grid.left - 58;
+    if (!mower.triggered) mower.x = game.grid.left - 42;
   });
 }
 
@@ -460,21 +460,20 @@ function drawDriveway(ctx) {
 }
 
 function drawHouse(ctx) {
-  const towerX = game.grid.left - 108;
+  const towerX = game.grid.left - 102;
   const towerY = game.grid.top - 8;
   const towerWidth = 82;
-  const towerHeight = game.grid.height + 36;
-
-  const brickColors = ["#8e633e", "#a2774f", "#6d4a30", "#b18860"];
-  const brickW = 22;
+  const towerHeight = game.grid.height + 38;
+  const brickColors = ["#8a5e3c", "#a87d54", "#6f4930", "#b38960"];
+  const brickW = 20;
   const brickH = 18;
 
   ctx.fillStyle = "#4d311c";
-  ctx.fillRect(towerX - 4, towerY - 6, towerWidth + 8, towerHeight + 10);
+  ctx.fillRect(towerX - 4, towerY - 5, towerWidth + 8, towerHeight + 10);
 
   for (let row = 0; row < Math.ceil(towerHeight / brickH); row += 1) {
     for (let col = 0; col < Math.ceil(towerWidth / brickW) + 1; col += 1) {
-      const x = towerX + col * brickW - (row % 2) * 11;
+      const x = towerX + col * brickW - (row % 2) * 10;
       const y = towerY + row * brickH;
       ctx.fillStyle = brickColors[(row + col) % brickColors.length];
       ctx.fillRect(x, y, brickW - 2, brickH - 2);
@@ -485,98 +484,115 @@ function drawHouse(ctx) {
   ctx.lineWidth = 2;
   ctx.strokeRect(towerX, towerY, towerWidth, towerHeight);
 
-  const annexX = towerX - 54;
-  const annexY = game.grid.top + game.cellHeight * 0.92;
-  const annexW = 58;
-  const annexH = 78;
+  const houseX = towerX - 74;
+  const houseY = game.grid.top + game.cellHeight * 0.98;
+  const houseW = 74;
+  const houseH = 96;
 
-  ctx.fillStyle = "#d8bc8e";
-  ctx.fillRect(annexX, annexY, annexW, annexH);
+  ctx.fillStyle = "#ead6aa";
+  ctx.fillRect(houseX, houseY, houseW, houseH);
   ctx.strokeStyle = "#5b3d21";
-  ctx.strokeRect(annexX, annexY, annexW, annexH);
+  ctx.lineWidth = 2;
+  ctx.strokeRect(houseX, houseY, houseW, houseH);
 
-  ctx.fillStyle = "#7a5330";
+  ctx.fillStyle = "rgba(255,255,255,0.15)";
+  ctx.fillRect(houseX + 4, houseY + 4, houseW - 8, 6);
+
+  ctx.fillStyle = "#7f5331";
   ctx.beginPath();
-  ctx.moveTo(annexX - 8, annexY + 8);
-  ctx.lineTo(annexX + annexW / 2, annexY - 22);
-  ctx.lineTo(annexX + annexW + 8, annexY + 8);
+  ctx.moveTo(houseX - 8, houseY + 10);
+  ctx.lineTo(houseX + houseW / 2, houseY - 26);
+  ctx.lineTo(houseX + houseW + 10, houseY + 10);
   ctx.closePath();
   ctx.fill();
 
-  ctx.strokeStyle = "rgba(255, 225, 170, 0.2)";
-  for (let tile = 0; tile < 5; tile += 1) {
+  ctx.strokeStyle = "rgba(255, 224, 170, 0.22)";
+  for (let tile = 0; tile < 8; tile += 1) {
     ctx.beginPath();
-    ctx.moveTo(annexX + 4 + tile * 11, annexY + 2);
-    ctx.lineTo(annexX + 14 + tile * 11, annexY + 12);
+    ctx.moveTo(houseX + 2 + tile * 10, houseY + 2);
+    ctx.lineTo(houseX + 14 + tile * 10, houseY + 13);
     ctx.stroke();
   }
 
-  ctx.fillStyle = "#acd2ea";
-  ctx.fillRect(annexX + 8, annexY + 22, 12, 16);
-  ctx.fillRect(annexX + 34, annexY + 22, 12, 16);
+  ctx.fillStyle = "#f4e9cf";
+  ctx.fillRect(houseX + 4, houseY + 58, 6, 32);
+
+  ctx.fillStyle = "#abd0e7";
+  ctx.fillRect(houseX + 12, houseY + 26, 14, 18);
+  ctx.fillRect(houseX + 48, houseY + 26, 14, 18);
   ctx.strokeStyle = "#4f341c";
-  ctx.strokeRect(annexX + 8, annexY + 22, 12, 16);
-  ctx.strokeRect(annexX + 34, annexY + 22, 12, 16);
+  ctx.strokeRect(houseX + 12, houseY + 26, 14, 18);
+  ctx.strokeRect(houseX + 48, houseY + 26, 14, 18);
   ctx.beginPath();
-  ctx.moveTo(annexX + 14, annexY + 22);
-  ctx.lineTo(annexX + 14, annexY + 38);
-  ctx.moveTo(annexX + 8, annexY + 30);
-  ctx.lineTo(annexX + 20, annexY + 30);
-  ctx.moveTo(annexX + 40, annexY + 22);
-  ctx.lineTo(annexX + 40, annexY + 38);
-  ctx.moveTo(annexX + 34, annexY + 30);
-  ctx.lineTo(annexX + 46, annexY + 30);
+  ctx.moveTo(houseX + 19, houseY + 26);
+  ctx.lineTo(houseX + 19, houseY + 44);
+  ctx.moveTo(houseX + 12, houseY + 35);
+  ctx.lineTo(houseX + 26, houseY + 35);
+  ctx.moveTo(houseX + 55, houseY + 26);
+  ctx.lineTo(houseX + 55, houseY + 44);
+  ctx.moveTo(houseX + 48, houseY + 35);
+  ctx.lineTo(houseX + 62, houseY + 35);
   ctx.stroke();
 
   ctx.fillStyle = "#674222";
-  ctx.fillRect(annexX + 21, annexY + 48, 14, 30);
-  ctx.strokeRect(annexX + 21, annexY + 48, 14, 30);
-
-  ctx.fillStyle = "#d8c6a2";
+  ctx.fillRect(houseX + 29, houseY + 52, 16, 44);
+  ctx.strokeRect(houseX + 29, houseY + 52, 16, 44);
+  ctx.fillStyle = "#d7b26c";
   ctx.beginPath();
-  ctx.moveTo(towerX - 20, game.grid.top + game.grid.height + 18);
-  ctx.lineTo(towerX + 20, game.grid.top + game.grid.height - 6);
-  ctx.lineTo(towerX + 20, game.grid.top + game.grid.height + 40);
-  ctx.lineTo(towerX - 20, game.grid.top + game.grid.height + 40);
+  ctx.arc(houseX + 41, houseY + 75, 1.7, 0, Math.PI * 2);
+  ctx.fill();
+
+  const baseY = game.grid.top + game.grid.height;
+
+  ctx.fillStyle = "#cdb88f";
+  ctx.beginPath();
+  ctx.moveTo(houseX - 8, baseY + 30);
+  ctx.lineTo(towerX + 18, baseY + 10);
+  ctx.lineTo(towerX + 18, baseY + 46);
+  ctx.lineTo(houseX - 8, baseY + 46);
   ctx.closePath();
   ctx.fill();
 
+  ctx.fillStyle = "#e6d5b1";
+  ctx.beginPath();
+  ctx.moveTo(houseX - 18, baseY + 36);
+  ctx.lineTo(houseX + 4, baseY + 20);
+  ctx.lineTo(houseX + 4, baseY + 52);
+  ctx.lineTo(houseX - 18, baseY + 56);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = "rgba(92, 61, 32, 0.16)";
+  ctx.fillRect(houseX - 2, baseY + 8, towerX - houseX + 20, 5);
+
   for (let row = 0; row < game.grid.rows; row += 1) {
     const centerY = getLaneCenter(row);
-    const bayX = towerX + 8;
-    const bayY = centerY - 31;
+    const bayX = towerX + 10;
+    const bayY = centerY - 28;
 
     ctx.fillStyle = "#6d4727";
     ctx.beginPath();
-    ctx.moveTo(bayX + 8, bayY + 4);
-    ctx.lineTo(bayX + 50, bayY + 4);
-    ctx.lineTo(bayX + 60, bayY + 14);
-    ctx.lineTo(bayX + 60, bayY + 50);
-    ctx.lineTo(bayX, bayY + 50);
+    ctx.moveTo(bayX + 6, bayY + 4);
+    ctx.lineTo(bayX + 40, bayY + 4);
+    ctx.lineTo(bayX + 50, bayY + 14);
+    ctx.lineTo(bayX + 50, bayY + 46);
+    ctx.lineTo(bayX, bayY + 46);
     ctx.lineTo(bayX, bayY + 14);
     ctx.closePath();
     ctx.fill();
 
     ctx.fillStyle = "#8f6238";
     ctx.beginPath();
-    ctx.moveTo(bayX + 4, bayY + 2);
-    ctx.lineTo(bayX + 46, bayY + 2);
-    ctx.lineTo(bayX + 56, bayY + 12);
-    ctx.lineTo(bayX + 56, bayY + 46);
-    ctx.lineTo(bayX + 4, bayY + 46);
+    ctx.moveTo(bayX + 2, bayY + 2);
+    ctx.lineTo(bayX + 36, bayY + 2);
+    ctx.lineTo(bayX + 46, bayY + 12);
+    ctx.lineTo(bayX + 46, bayY + 42);
+    ctx.lineTo(bayX + 2, bayY + 42);
     ctx.closePath();
     ctx.fill();
 
     ctx.strokeStyle = "rgba(56, 35, 19, 0.45)";
     ctx.stroke();
-
-    ctx.strokeStyle = "rgba(255, 223, 172, 0.14)";
-    for (let plank = 0; plank < 4; plank += 1) {
-      ctx.beginPath();
-      ctx.moveTo(bayX + 8, bayY + 10 + plank * 9);
-      ctx.lineTo(bayX + 50, bayY + 10 + plank * 9);
-      ctx.stroke();
-    }
   }
 }
 
@@ -667,7 +683,7 @@ function drawMowers(ctx) {
   game.mowers.forEach((mower) => {
     if (!mower.active) return;
     ctx.save();
-    ctx.translate(mower.x - 4, mower.y + 6);
+    ctx.translate(mower.x - 4, mower.y + 3);
     ctx.fillStyle = "rgba(0,0,0,0.18)";
     ctx.beginPath();
     ctx.ellipse(0, 18, 22, 7, 0, 0, Math.PI * 2);
@@ -768,7 +784,7 @@ function drawLaneLabels(ctx) {
 
   for (let row = 0; row < game.grid.rows; row += 1) {
     const centerY = getLaneCenter(row);
-    const signX = game.grid.left - 132;
+    const signX = game.grid.left - 138;
     const signY = centerY - 12;
 
     ctx.fillStyle = "#a48354";
@@ -1089,6 +1105,15 @@ game.spawnBlood = spawnBlood;
 game.spawnZombieParts = spawnZombieParts;
 
 window.addEventListener("load", setup);
+
+
+
+
+
+
+
+
+
 
 
 

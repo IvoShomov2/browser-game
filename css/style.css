@@ -92,7 +92,7 @@ button {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  width: min(286px, calc(100vw - 28px));
+  width: min(252px, calc(100vw - 28px));
   max-height: calc(100vh - 28px);
   overflow-y: auto;
   overflow-x: hidden;
@@ -432,3 +432,4 @@ button {
     flex-basis: auto;
   }
 }
+
