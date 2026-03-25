@@ -81,7 +81,7 @@
     };
   }
 
-  drawShadow(ctx, game, center) {
+  drawShadow(ctx, game) {
     ctx.save();
     ctx.fillStyle = "rgba(0, 0, 0, 0.18)";
     ctx.beginPath();
@@ -99,7 +99,7 @@
 
     ctx.save();
     ctx.translate(center.x, center.y + bounce);
-    this.drawShadow(ctx, game, center);
+    this.drawShadow(ctx, game);
     ctx.scale(scale, scale);
     ctx.rotate(tilt);
 
@@ -124,7 +124,7 @@
     ctx.fillRect(cell.x + 14, cell.y + cell.height - 14, (cell.width - 28) * healthRatio, 7);
   }
 
-  drawStem(ctx, game) {
+  drawStem(ctx) {
     const stemGradient = ctx.createLinearGradient(0, 34, 0, -18);
     stemGradient.addColorStop(0, "#2f6a18");
     stemGradient.addColorStop(1, "#84ce56");
@@ -153,7 +153,7 @@
   }
 
   drawPeashooter(ctx, game) {
-    this.drawStem(ctx, game);
+    this.drawStem(ctx);
 
     const head = ctx.createRadialGradient(-8, -18, 8, 4, -16, 34);
     head.addColorStop(0, "#abf07a");
@@ -193,8 +193,8 @@
     ctx.stroke();
   }
 
-  drawSunflower(ctx, game) {
-    this.drawStem(ctx, game);
+  drawSunflower(ctx) {
+    this.drawStem(ctx);
 
     for (let index = 0; index < 12; index += 1) {
       const angle = (Math.PI * 2 * index) / 12;
@@ -347,6 +347,7 @@ class SunToken {
     this.floatOffset = Math.random() * Math.PI * 2;
     this.vy = drifting ? 20 + Math.random() * 20 : 0;
     this.active = true;
+    this.collectRadius = 52;
   }
 
   update(deltaTime) {
@@ -362,6 +363,10 @@ class SunToken {
 
   containsPoint(x, y) {
     return Math.hypot(this.x - x, this.y - y) <= this.radius;
+  }
+
+  isNear(x, y) {
+    return Math.hypot(this.x - x, this.y - y) <= this.collectRadius;
   }
 
   draw(ctx, totalTime) {

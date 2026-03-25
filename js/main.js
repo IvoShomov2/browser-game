@@ -63,6 +63,12 @@
   zombiesDefeated: 0,
   screenShake: 0,
   laneWarnings: [0, 0, 0, 0, 0],
+  waveTimer: 19,
+  waveDuration: 19,
+  currentWaveSize: 3,
+  zombiesSpawnedThisWave: 0,
+  nextSpawnDelay: 1.4,
+  spawnClock: 1.4,
   spawnIntervalId: null,
   sunIntervalId: null,
   waveIntervalId: null,
@@ -206,6 +212,11 @@ function resetRun() {
   game.lastTime = 0;
   game.screenShake = 0;
   game.laneWarnings = [0, 0, 0, 0, 0];
+  game.waveTimer = game.waveDuration;
+  game.currentWaveSize = 3;
+  game.zombiesSpawnedThisWave = 0;
+  game.nextSpawnDelay = 1.4;
+  game.spawnClock = 1.4;
   selectPlant("peashooter");
   setTip("Build a balanced defense: economy first, then damage, then blockers.");
   updateHud();
@@ -251,12 +262,6 @@ function endGame(win) {
 function startTimers() {
   stopTimers();
 
-  game.spawnIntervalId = window.setInterval(() => {
-    if (game.state === "running") {
-      spawnEnemy();
-    }
-  }, Math.max(1000, 3400 - game.level * 180));
-
   game.sunIntervalId = window.setInterval(() => {
     if (game.state === "running") {
       spawnSun(
@@ -271,16 +276,9 @@ function startTimers() {
 
   game.waveIntervalId = window.setInterval(() => {
     if (game.state === "running") {
-      game.wave += 1;
-      game.level = 1 + Math.floor((game.wave - 1) / 2);
-      game.score += 50;
-      if (game.wave % 2 === 0) {
-        spawnEnemy();
-      }
-      document.dispatchEvent(new CustomEvent("levelUp", { detail: { level: game.level, wave: game.wave } }));
-      updateHud();
+      advanceWave();
     }
-  }, 19000);
+  }, game.waveDuration * 1000);
 }
 
 function stopTimers() {
@@ -310,6 +308,15 @@ function update(deltaTime) {
   game.scareTimer = Math.max(0, game.scareTimer - deltaTime);
   game.screenShake = Math.max(0, game.screenShake - deltaTime * 1.8);
   game.laneWarnings = game.laneWarnings.map(() => 0);
+  game.waveTimer = Math.max(0, game.waveTimer - deltaTime);
+  game.spawnClock -= deltaTime;
+
+  if (game.zombiesSpawnedThisWave < game.currentWaveSize && game.spawnClock <= 0) {
+    spawnEnemy();
+    game.zombiesSpawnedThisWave += 1;
+    game.nextSpawnDelay = Math.max(0.45, 1.5 - game.level * 0.06 - game.wave * 0.02 + Math.random() * 0.25);
+    game.spawnClock = game.nextSpawnDelay;
+  }
 
   game.plants.forEach((plant) => plant.update(game, deltaTime));
   game.projectiles.forEach((projectile) => projectile.update(game, deltaTime));
@@ -332,7 +339,12 @@ function update(deltaTime) {
       }
     }
   });
-  game.suns.forEach((sun) => sun.update(deltaTime));
+  game.suns.forEach((sun) => {
+    sun.update(deltaTime);
+    if (sun.active && sun.isNear(game.mouse.x, game.mouse.y)) {
+      collectSun(sun, true);
+    }
+  });
 
   game.plants = game.plants.filter((plant) => !plant.isDead());
   game.projectiles = game.projectiles.filter((projectile) => projectile.active);
@@ -525,6 +537,11 @@ function drawLaneLabels(ctx) {
     ctx.font = "bold 18px Trebuchet MS";
     ctx.fillText("Crow Call Active", game.grid.left, game.grid.top - 22);
   }
+
+  ctx.textAlign = "right";
+  ctx.fillStyle = "rgba(22, 20, 15, 0.82)";
+  ctx.font = "bold 16px Trebuchet MS";
+  ctx.fillText(`Next wave in ${Math.ceil(game.waveTimer)}s`, game.grid.left + game.grid.width, game.grid.top - 18);
   ctx.restore();
 }
 
@@ -609,13 +626,6 @@ function handleCanvasClick() {
     return;
   }
 
-  for (const sun of game.suns) {
-    if (sun.containsPoint(game.mouse.x, game.mouse.y)) {
-      collectSun(sun);
-      return;
-    }
-  }
-
   const cell = getHoveredCell();
   if (!cell) {
     return;
@@ -693,12 +703,15 @@ function spawnSun(x, y, value, drifting) {
   game.suns.push(new SunToken(x, y, value, drifting));
 }
 
-function collectSun(sun) {
+function collectSun(sun, autoCollect = false) {
+  if (!sun.active) {
+    return;
+  }
   sun.active = false;
   game.sun += sun.value;
   game.score += 8;
   game.playSound("collect");
-  setTip(`Sun collected. Reserve now at ${game.sun}.`);
+  setTip(autoCollect ? `Sun auto-collected. Reserve now at ${game.sun}.` : `Sun collected. Reserve now at ${game.sun}.`);
   updateHud();
 }
 
@@ -803,6 +816,19 @@ function findProjectileTarget(projectile) {
     }
     return Math.abs(enemy.x - projectile.x) < enemy.width * 0.5;
   }) || null;
+}
+
+function advanceWave() {
+  game.wave += 1;
+  game.level = 1 + Math.floor((game.wave - 1) / 2);
+  game.score += 50;
+  game.waveTimer = game.waveDuration;
+  game.currentWaveSize = 3 + game.wave * 2 + Math.floor(game.level * 1.5);
+  game.zombiesSpawnedThisWave = 0;
+  game.nextSpawnDelay = Math.max(0.45, 1.35 - game.level * 0.06);
+  game.spawnClock = 0.35;
+  document.dispatchEvent(new CustomEvent("levelUp", { detail: { level: game.level, wave: game.wave } }));
+  updateHud();
 }
 
 function ensureAudio() {
