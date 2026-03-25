@@ -1,0 +1,80 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Garden Last Stand</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="gameContainer">
+    <canvas id="gameCanvas" aria-label="Garden Last Stand canvas"></canvas>
+
+    <header id="hud">
+      <div class="hud-group"><span class="hud-label">Base</span><strong id="healthValue">100</strong></div>
+      <div class="hud-group"><span class="hud-label">Sun</span><strong id="sunValue">150</strong></div>
+      <div class="hud-group"><span class="hud-label">Score</span><strong id="scoreValue">0</strong></div>
+      <div class="hud-group"><span class="hud-label">Level</span><strong id="levelValue">1</strong></div>
+      <div class="hud-group"><span class="hud-label">Wave</span><strong id="waveValue">1</strong></div>
+      <div class="hud-group"><span class="hud-label">Zoom</span><strong id="zoomValue">1.00x</strong></div>
+      <div class="hud-group"><span class="hud-label">State</span><strong id="statusValue">Menu</strong></div>
+    </header>
+
+    <aside id="sidebar">
+      <div class="sidebar-card">
+        <p class="sidebar-title">Seed Pack</p>
+        <button class="seed-button active" data-seed="peashooter">Peashooter <span>100 sun</span></button>
+        <button class="seed-button" data-seed="sunflower">Sunflower <span>50 sun</span></button>
+        <button class="seed-button" data-seed="wallnut">Wallnut <span>75 sun</span></button>
+      </div>
+
+      <div class="sidebar-card">
+        <p class="sidebar-title">Controls</p>
+        <p class="sidebar-text">Click a tile to plant.</p>
+        <p class="sidebar-text">Right-click a tile to dig up a plant.</p>
+        <p class="sidebar-text">Press 1, 2, 3 or use the wheel to switch seeds.</p>
+        <p class="sidebar-text">ESC pauses. M toggles sound. C drops a bonus sun.</p>
+      </div>
+
+      <div class="sidebar-card">
+        <button id="muteButton" class="secondary-button">Sound: On</button>
+      </div>
+    </aside>
+
+    <section id="menuOverlay" class="overlay visible">
+      <div class="panel">
+        <p class="eyebrow">HTML5 Canvas Defense Game</p>
+        <h1>Garden Last Stand</h1>
+        <p>Place plant defenders, collect sun energy, and hold five lanes against zombie waves. The zombie behavior is driven by a reusable finite state machine.</p>
+        <button id="playButton" class="primary-button">Play Game</button>
+        <p class="hint">Zombie FSM states: SPAWN, WALK, TARGET, EAT, RAGE, FLEE, DEAD, RESPAWN.</p>
+      </div>
+    </section>
+
+    <section id="pauseOverlay" class="overlay">
+      <div class="panel">
+        <p class="eyebrow">Game Paused</p>
+        <h2>Take a Breath</h2>
+        <p>Press ESC to continue or use the button below.</p>
+        <button id="resumeButton" class="primary-button">Resume</button>
+      </div>
+    </section>
+
+    <section id="gameOverOverlay" class="overlay">
+      <div class="panel">
+        <p class="eyebrow">Run Ended</p>
+        <h2 id="gameOverTitle">Game Over</h2>
+        <p id="gameOverText">The zombies reached the house.</p>
+        <p class="summary-line">Final score: <span id="finalScoreValue">0</span></p>
+        <p class="summary-line">Highest wave: <span id="finalWaveValue">1</span></p>
+        <button id="restartButton" class="primary-button">Play Again</button>
+      </div>
+    </section>
+  </div>
+
+  <script src="js/fsm.js"></script>
+  <script src="js/player.js"></script>
+  <script src="js/enemy.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
