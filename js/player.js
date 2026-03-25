@@ -24,7 +24,7 @@
 
   update(game, deltaTime) {
     this.shake = Math.max(0, this.shake - deltaTime * 4);
-    this.recoil = Math.max(0, this.recoil - deltaTime * 4.6);
+    this.recoil = Math.max(0, this.recoil - deltaTime * 4.8);
 
     if (this.type === "peashooter") {
       this.reload -= deltaTime;
@@ -112,7 +112,7 @@
     }
 
     if (this.type === "sunflower") {
-      this.drawSunflower(ctx, game);
+      this.drawSunflower(ctx);
     }
 
     if (this.type === "wallnut") {
@@ -158,7 +158,8 @@
 
   drawPeashooter(ctx, game) {
     this.drawStem(ctx);
-    const recoilOffset = this.recoil * 6;
+    const recoilOffset = this.recoil * 8;
+    const jawPulse = Math.max(0, this.recoil) * 6;
 
     ctx.save();
     ctx.translate(-recoilOffset, 0);
@@ -181,18 +182,18 @@
     muzzle.addColorStop(1, "#4c9d2a");
     ctx.fillStyle = muzzle;
     ctx.beginPath();
-    ctx.roundRect(10, -27, 31, 20, 10);
+    ctx.roundRect(10, -29, 33, 22, 11);
     ctx.fill();
 
     ctx.fillStyle = "#2c5d1a";
     ctx.beginPath();
-    ctx.arc(39, -17, 6.5, 0, Math.PI * 2);
+    ctx.arc(41, -18, 7 + jawPulse * 0.08, 0, Math.PI * 2);
     ctx.fill();
 
     if (this.recoil > 0.08) {
-      ctx.fillStyle = `rgba(212,255,173, ${this.recoil * 0.8})`;
+      ctx.fillStyle = `rgba(212,255,173, ${this.recoil * 0.85})`;
       ctx.beginPath();
-      ctx.arc(45, -17, 8 + this.recoil * 10, 0, Math.PI * 2);
+      ctx.arc(47, -18, 8 + this.recoil * 12, 0, Math.PI * 2);
       ctx.fill();
     }
 
@@ -331,6 +332,9 @@ class Projectile {
       target.takeDamage(this.damage);
       target.hitFlash = 0.25;
       this.active = false;
+      if (game.spawnBlood) {
+        game.spawnBlood(target, 5, 1);
+      }
       game.score += 4;
       game.playSound("impact");
     }
