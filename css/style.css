@@ -1,18 +1,14 @@
 ﻿:root {
-  --ink: #16140f;
+  --ink: #14110d;
   --cream: #fff7df;
-  --grass-light: #8ed45e;
-  --grass-mid: #5eab3d;
-  --grass-dark: #305f22;
-  --soil: #80532d;
-  --wood: #6f4322;
-  --panel: rgba(23, 39, 23, 0.82);
+  --gold: #ffb347;
+  --gold-deep: #d67d14;
+  --leaf: #7cc84c;
+  --leaf-deep: #3f8926;
+  --danger: #df553c;
+  --panel: rgba(18, 30, 18, 0.82);
   --panel-border: rgba(255, 247, 223, 0.16);
-  --accent: #ffb347;
-  --accent-dark: #dd7d15;
-  --success: #8dd65e;
-  --danger: #e14d3a;
-  --shadow: rgba(15, 13, 9, 0.28);
+  --shadow: rgba(13, 11, 8, 0.3);
 }
 
 * {
@@ -26,8 +22,8 @@ body {
   overflow: hidden;
   color: var(--ink);
   background:
-    radial-gradient(circle at top, rgba(255, 251, 241, 0.78), transparent 34%),
-    linear-gradient(180deg, #a9d8ff 0%, #dceea9 22%, #bcd46e 46%, #8aba51 68%, #6f9b44 100%);
+    radial-gradient(circle at top, rgba(255, 251, 241, 0.78), transparent 32%),
+    linear-gradient(180deg, #a8dbff 0%, #dff0ba 22%, #b7d86b 46%, #7fb14c 69%, #648e40 100%);
   font-family: "Trebuchet MS", "Segoe UI", sans-serif;
 }
 
@@ -54,20 +50,20 @@ button {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  max-width: min(900px, calc(100vw - 320px));
+  max-width: min(920px, calc(100vw - 328px));
   z-index: 5;
 }
 
 .hud-group {
-  min-width: 102px;
+  min-width: 104px;
   padding: 11px 14px;
   border: 1px solid var(--panel-border);
-  border-radius: 16px;
+  border-radius: 17px;
   color: var(--cream);
   background:
-    linear-gradient(180deg, rgba(45, 66, 39, 0.95), rgba(27, 42, 27, 0.94));
+    linear-gradient(180deg, rgba(44, 62, 37, 0.96), rgba(19, 29, 18, 0.94));
   box-shadow: 0 14px 34px var(--shadow);
-  backdrop-filter: blur(14px);
+  backdrop-filter: blur(16px);
 }
 
 .hud-label {
@@ -91,7 +87,7 @@ button {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  width: min(276px, calc(100vw - 36px));
+  width: min(278px, calc(100vw - 36px));
   max-height: calc(100vh - 36px);
   overflow-y: auto;
   overflow-x: hidden;
@@ -121,14 +117,14 @@ button {
   color: var(--cream);
   background:
     radial-gradient(circle at top, rgba(255, 247, 223, 0.08), transparent 42%),
-    linear-gradient(180deg, rgba(32, 49, 30, 0.96), rgba(18, 30, 20, 0.94));
+    linear-gradient(180deg, rgba(31, 48, 29, 0.96), rgba(16, 25, 17, 0.94));
   box-shadow: 0 18px 38px var(--shadow);
   backdrop-filter: blur(14px);
 }
 
 .brand-card h2 {
   font-family: Georgia, "Times New Roman", serif;
-  font-size: 1.8rem;
+  font-size: 1.86rem;
   margin: 2px 0 10px;
 }
 
@@ -142,18 +138,14 @@ button {
 
 .sidebar-text {
   font-size: 0.93rem;
-  line-height: 1.52;
-  opacity: 0.94;
-}
-
-.sidebar-text + .sidebar-text {
-  margin-top: 8px;
+  line-height: 1.54;
+  opacity: 0.95;
 }
 
 .controls-card {
   background:
-    radial-gradient(circle at top, rgba(255, 204, 120, 0.1), transparent 40%),
-    linear-gradient(180deg, rgba(46, 61, 31, 0.98), rgba(21, 30, 20, 0.96));
+    radial-gradient(circle at top, rgba(255, 198, 110, 0.12), transparent 40%),
+    linear-gradient(180deg, rgba(50, 63, 31, 0.98), rgba(20, 28, 19, 0.96));
 }
 
 .control-line {
@@ -244,7 +236,7 @@ button {
 
 .seed-main small {
   font-size: 0.8rem;
-  opacity: 0.7;
+  opacity: 0.74;
 }
 
 .seed-cost {
@@ -257,7 +249,7 @@ button {
 }
 
 .seed-button.active {
-  background: linear-gradient(135deg, rgba(255, 179, 71, 0.95), rgba(221, 125, 21, 0.95));
+  background: linear-gradient(135deg, rgba(255, 179, 71, 0.96), rgba(214, 125, 20, 0.96));
   box-shadow: 0 14px 28px rgba(139, 78, 20, 0.35);
 }
 
@@ -274,13 +266,13 @@ button {
 
 .primary-button {
   color: white;
-  background: linear-gradient(135deg, var(--success), #4e9d31);
-  box-shadow: 0 14px 28px rgba(65, 127, 35, 0.28);
+  background: linear-gradient(135deg, var(--leaf), var(--leaf-deep));
+  box-shadow: 0 14px 28px rgba(52, 122, 33, 0.28);
 }
 
 .secondary-button {
   color: var(--cream);
-  background: linear-gradient(135deg, rgba(255, 179, 71, 0.95), rgba(221, 125, 21, 0.95));
+  background: linear-gradient(135deg, rgba(255, 179, 71, 0.95), rgba(214, 125, 20, 0.95));
   box-shadow: 0 14px 28px rgba(139, 78, 20, 0.35);
 }
 
@@ -291,7 +283,7 @@ button {
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: linear-gradient(180deg, rgba(18, 15, 10, 0.24), rgba(18, 15, 10, 0.72));
+  background: linear-gradient(180deg, rgba(18, 15, 10, 0.26), rgba(18, 15, 10, 0.74));
   z-index: 10;
 }
 
@@ -300,7 +292,7 @@ button {
 }
 
 .panel {
-  width: min(650px, 100%);
+  width: min(660px, 100%);
   padding: 38px;
   border: 1px solid rgba(255, 247, 223, 0.3);
   border-radius: 30px;
@@ -308,12 +300,12 @@ button {
   color: var(--cream);
   background:
     radial-gradient(circle at top, rgba(255, 240, 213, 0.14), transparent 40%),
-    linear-gradient(180deg, rgba(38, 61, 29, 0.97), rgba(20, 31, 17, 0.96));
+    linear-gradient(180deg, rgba(37, 59, 28, 0.97), rgba(17, 27, 16, 0.96));
   box-shadow: 0 28px 72px rgba(15, 13, 9, 0.38);
 }
 
 .hero-panel {
-  max-width: 680px;
+  max-width: 690px;
 }
 
 .eyebrow {
@@ -337,7 +329,7 @@ button {
 }
 
 .panel h1 {
-  font-size: clamp(2.8rem, 7vw, 4.8rem);
+  font-size: clamp(2.9rem, 7vw, 5rem);
 }
 
 .panel h2 {

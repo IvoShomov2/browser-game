@@ -2,8 +2,8 @@
   constructor(lane, level, canvasWidth) {
     this.lane = lane;
     this.level = level;
-    this.width = 54;
-    this.height = 82;
+    this.width = 56;
+    this.height = 86;
     this.x = canvasWidth + 90 + Math.random() * 180;
     this.y = 0;
     this.baseSpeed = 22 + level * 1.9 + Math.random() * 7;
@@ -19,6 +19,9 @@
     this.hasAwardedScore = false;
     this.removed = false;
     this.walkCycle = Math.random() * Math.PI * 2;
+    this.skinTone = ["#8e6c58", "#94715d", "#82624f"][Math.floor(Math.random() * 3)];
+    this.jacket = ["#506d62", "#4f5d78", "#6a5b72"][Math.floor(Math.random() * 3)];
+    this.tie = ["#cf443b", "#bb7c28", "#8e3cad"][Math.floor(Math.random() * 3)];
 
     this.fsm = new FiniteStateMachine(this, "SPAWN");
     this.setupStates();
@@ -172,7 +175,7 @@
   update(game, deltaTime) {
     this.y = game.getLaneCenter(this.lane);
     this.hitFlash = Math.max(0, this.hitFlash - deltaTime);
-    this.walkCycle += deltaTime * (this.baseSpeed * this.speedMultiplier * 0.06 + 3.8);
+    this.walkCycle += deltaTime * (this.baseSpeed * this.speedMultiplier * 0.06 + 3.9);
     this.fsm.update(game, deltaTime);
   }
 
@@ -202,16 +205,11 @@
 
   draw(ctx) {
     const isGhosted = this.fsm.matches("DEAD");
-    const bodyColor = this.fsm.matches("RAGE")
-      ? "#c94d27"
-      : this.fsm.matches("FLEE")
-        ? "#d8a24b"
-        : this.fsm.matches("SPAWN", "RESPAWN")
-          ? "#8f7dff"
-          : "#5a7562";
-    const armSwing = Math.sin(this.walkCycle) * 8;
-    const legSwing = Math.sin(this.walkCycle + Math.PI) * 7;
+    const armSwing = Math.sin(this.walkCycle) * 9;
+    const legSwing = Math.sin(this.walkCycle + Math.PI) * 8;
     const headTilt = Math.sin(this.walkCycle * 0.7) * 0.05;
+    const bodyLean = this.fsm.matches("RAGE") ? -0.1 : this.fsm.matches("FLEE") ? 0.08 : -0.03;
+    const jacket = this.fsm.matches("RAGE") ? "#8a432c" : this.jacket;
 
     ctx.save();
     ctx.translate(this.x, this.y);
@@ -219,87 +217,94 @@
 
     ctx.fillStyle = "rgba(0,0,0,0.22)";
     ctx.beginPath();
-    ctx.ellipse(0, 40, 22, 8, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 42, 22, 8, 0, 0, Math.PI * 2);
     ctx.fill();
 
     if (this.hitFlash > 0) {
       ctx.fillStyle = "rgba(255, 245, 219, 0.45)";
       ctx.beginPath();
-      ctx.arc(0, -12, 34, 0, Math.PI * 2);
+      ctx.arc(0, -10, 34, 0, Math.PI * 2);
       ctx.fill();
     }
 
     ctx.save();
+    ctx.rotate(bodyLean);
+
+    ctx.save();
     ctx.rotate(headTilt);
-    ctx.fillStyle = "#8b6b54";
+    ctx.fillStyle = this.skinTone;
     ctx.beginPath();
-    ctx.arc(0, -26, 18, 0, Math.PI * 2);
+    ctx.arc(0, -28, 18, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.fillStyle = "#f6f1e5";
     ctx.beginPath();
-    ctx.arc(-6, -28, 4.2, 0, Math.PI * 2);
-    ctx.arc(6, -28, 4.2, 0, Math.PI * 2);
+    ctx.arc(-6, -30, 4.2, 0, Math.PI * 2);
+    ctx.arc(6, -30, 4.2, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.fillStyle = "#2a221b";
     ctx.beginPath();
-    ctx.arc(-6, -28, 1.9, 0, Math.PI * 2);
-    ctx.arc(6, -28, 1.9, 0, Math.PI * 2);
+    ctx.arc(-6, -30, 1.9, 0, Math.PI * 2);
+    ctx.arc(6, -30, 1.9, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.strokeStyle = "#2a221b";
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(-8, -18);
-    ctx.lineTo(9, -15);
+    ctx.moveTo(-8, -19);
+    ctx.lineTo(9, -16);
     ctx.stroke();
 
+    ctx.fillStyle = "#eee2c8";
     if (this.fsm.matches("EAT")) {
-      ctx.fillStyle = "#ede1c5";
-      ctx.fillRect(-4, -10, 12, 8);
+      ctx.fillRect(-5, -11, 13, 9);
     }
     ctx.restore();
 
-    ctx.fillStyle = bodyColor;
-    ctx.fillRect(-14, -6, 28, 44);
-    ctx.fillStyle = "#4d2d45";
-    ctx.fillRect(-14, 2, 28, 14);
-    ctx.fillStyle = "#c1433c";
+    ctx.fillStyle = jacket;
+    ctx.fillRect(-14, -6, 28, 46);
+    ctx.fillStyle = "#ece4d6";
+    ctx.fillRect(-5, -6, 10, 46);
+    ctx.fillStyle = this.tie;
     ctx.beginPath();
-    ctx.moveTo(0, -6);
-    ctx.lineTo(-4, 16);
-    ctx.lineTo(4, 16);
+    ctx.moveTo(0, -5);
+    ctx.lineTo(-4, 18);
+    ctx.lineTo(4, 18);
     ctx.closePath();
     ctx.fill();
 
-    ctx.strokeStyle = "#8b6b54";
+    ctx.fillStyle = "#42303f";
+    ctx.fillRect(-14, 6, 28, 12);
+
+    ctx.strokeStyle = this.skinTone;
     ctx.lineWidth = 8;
     ctx.lineCap = "round";
     ctx.beginPath();
-    ctx.moveTo(-12, -1);
-    ctx.lineTo(-25, 10 + armSwing);
-    ctx.moveTo(12, -1);
-    ctx.lineTo(25, 10 - armSwing);
+    ctx.moveTo(-12, 0);
+    ctx.lineTo(-26, 12 + armSwing);
+    ctx.moveTo(12, 0);
+    ctx.lineTo(27, 12 - armSwing);
     ctx.stroke();
 
-    ctx.strokeStyle = "#3d2814";
+    ctx.strokeStyle = "#2d2318";
     ctx.lineWidth = 9;
     ctx.beginPath();
-    ctx.moveTo(-7, 38);
-    ctx.lineTo(-9, 57 + legSwing);
-    ctx.moveTo(7, 38);
-    ctx.lineTo(9, 57 - legSwing);
+    ctx.moveTo(-7, 39);
+    ctx.lineTo(-9, 59 + legSwing);
+    ctx.moveTo(7, 39);
+    ctx.lineTo(9, 59 - legSwing);
     ctx.stroke();
 
-    ctx.fillStyle = "#26190d";
-    ctx.fillRect(-16, 56 + legSwing, 12, 6);
-    ctx.fillRect(4, 56 - legSwing, 12, 6);
+    ctx.fillStyle = "#20150b";
+    ctx.fillRect(-17, 58 + legSwing, 13, 6);
+    ctx.fillRect(4, 58 - legSwing, 13, 6);
+    ctx.restore();
 
     ctx.fillStyle = "rgba(22, 20, 15, 0.42)";
-    ctx.fillRect(-20, -48, 40, 6);
+    ctx.fillRect(-21, -50, 42, 6);
     ctx.fillStyle = this.health / this.maxHealth > 0.45 ? "#87d556" : "#ffb347";
-    ctx.fillRect(-20, -48, 40 * Math.max(0, this.health / this.maxHealth), 6);
+    ctx.fillRect(-21, -50, 42 * Math.max(0, this.health / this.maxHealth), 6);
 
     ctx.restore();
   }

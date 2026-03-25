@@ -17,7 +17,7 @@
       name: "Peashooter",
       cost: 100,
       maxHealth: 110,
-      reloadTime: 1.05,
+      reloadTime: 1.02,
       damage: 20,
       color: "#65b646",
       highlight: "#8ce667",
@@ -28,7 +28,7 @@
       name: "Sunflower",
       cost: 50,
       maxHealth: 90,
-      sunInterval: 6.6,
+      sunInterval: 6.4,
       color: "#f6b940",
       highlight: "#845834",
       description: "Build economy and keep your sun reserve healthy."
@@ -339,6 +339,7 @@ function update(deltaTime) {
       }
     }
   });
+
   game.suns.forEach((sun) => {
     sun.update(deltaTime);
     if (sun.active && sun.isNear(game.mouse.x, game.mouse.y)) {
@@ -381,19 +382,18 @@ function draw() {
 
 function drawBackground(ctx) {
   const sky = ctx.createLinearGradient(0, 0, 0, game.canvas.height);
-  sky.addColorStop(0, "#b7e3ff");
-  sky.addColorStop(0.38, "#dff4bf");
-  sky.addColorStop(0.76, "#80bf53");
-  sky.addColorStop(1, "#699446");
+  sky.addColorStop(0, "#bde4ff");
+  sky.addColorStop(0.28, "#e7f8cf");
+  sky.addColorStop(0.76, "#7db64d");
+  sky.addColorStop(1, "#60853d");
   ctx.fillStyle = sky;
   ctx.fillRect(0, 0, game.canvas.width, game.canvas.height);
 
-  ctx.fillStyle = "rgba(255,255,255,0.6)";
-  ctx.beginPath();
-  ctx.arc(160, 90, 44, 0, Math.PI * 2);
-  ctx.fill();
+  drawCloud(ctx, 170, 85, 1.2);
+  drawCloud(ctx, 470, 118, 0.95);
+  drawCloud(ctx, 920, 88, 1.1);
 
-  ctx.fillStyle = "#9dd28d";
+  ctx.fillStyle = "#a8d08c";
   ctx.beginPath();
   ctx.moveTo(0, game.grid.top + 24);
   ctx.quadraticCurveTo(180, game.grid.top - 90, 360, game.grid.top + 18);
@@ -404,7 +404,7 @@ function drawBackground(ctx) {
   ctx.closePath();
   ctx.fill();
 
-  ctx.fillStyle = "#83b06c";
+  ctx.fillStyle = "#86b36e";
   ctx.beginPath();
   ctx.moveTo(0, game.grid.top + 70);
   ctx.quadraticCurveTo(220, game.grid.top - 10, 440, game.grid.top + 64);
@@ -417,31 +417,49 @@ function drawBackground(ctx) {
 
   drawHouse(ctx);
   drawFence(ctx);
+  drawGrassBorder(ctx);
+}
+
+function drawCloud(ctx, x, y, scale) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(scale, scale);
+  ctx.fillStyle = "rgba(255,255,255,0.68)";
+  ctx.beginPath();
+  ctx.arc(0, 0, 26, 0, Math.PI * 2);
+  ctx.arc(30, -10, 22, 0, Math.PI * 2);
+  ctx.arc(56, 2, 20, 0, Math.PI * 2);
+  ctx.arc(22, 10, 24, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
 }
 
 function drawHouse(ctx) {
-  const houseX = game.grid.left - 112;
-  const houseY = game.grid.top + game.grid.height * 0.38;
+  const houseX = game.grid.left - 122;
+  const houseY = game.grid.top + game.grid.height * 0.37;
 
-  ctx.fillStyle = "#f2d7a0";
-  ctx.fillRect(houseX, houseY - 66, 72, 66);
-  ctx.fillStyle = "#9b4e27";
+  ctx.fillStyle = "#f0d59f";
+  ctx.fillRect(houseX, houseY - 70, 84, 70);
+  ctx.fillStyle = "#9a4d28";
   ctx.beginPath();
-  ctx.moveTo(houseX - 6, houseY - 66);
-  ctx.lineTo(houseX + 36, houseY - 102);
-  ctx.lineTo(houseX + 78, houseY - 66);
+  ctx.moveTo(houseX - 8, houseY - 70);
+  ctx.lineTo(houseX + 42, houseY - 110);
+  ctx.lineTo(houseX + 92, houseY - 70);
   ctx.closePath();
   ctx.fill();
 
-  ctx.fillStyle = "#6e4022";
-  ctx.fillRect(houseX + 26, houseY - 28, 18, 28);
-  ctx.fillStyle = "#9ec7ef";
-  ctx.fillRect(houseX + 9, houseY - 50, 16, 16);
-  ctx.fillRect(houseX + 47, houseY - 50, 16, 16);
+  ctx.fillStyle = "#65391c";
+  ctx.fillRect(houseX + 31, houseY - 30, 20, 30);
+  ctx.fillStyle = "#a6d1f1";
+  ctx.fillRect(houseX + 10, houseY - 55, 18, 18);
+  ctx.fillRect(houseX + 56, houseY - 55, 18, 18);
+
+  ctx.fillStyle = "rgba(0,0,0,0.1)";
+  ctx.fillRect(houseX, houseY, 84, 10);
 }
 
 function drawFence(ctx) {
-  const startX = game.grid.left - 34;
+  const startX = game.grid.left - 36;
   for (let row = 0; row < game.grid.rows; row += 1) {
     const y = getLaneCenter(row) + game.cellHeight * 0.24;
     ctx.fillStyle = "#936035";
@@ -450,6 +468,17 @@ function drawFence(ctx) {
     }
     ctx.fillRect(startX - 2, y - 16, 34, 4);
     ctx.fillRect(startX - 2, y - 4, 34, 4);
+  }
+}
+
+function drawGrassBorder(ctx) {
+  ctx.fillStyle = "rgba(51, 109, 29, 0.35)";
+  for (let x = game.grid.left - 24; x < game.grid.left + game.grid.width + 22; x += 18) {
+    ctx.beginPath();
+    ctx.moveTo(x, game.grid.top + game.grid.height + 4);
+    ctx.lineTo(x + 4, game.grid.top + game.grid.height - 10);
+    ctx.lineTo(x + 8, game.grid.top + game.grid.height + 4);
+    ctx.fill();
   }
 }
 
@@ -464,8 +493,8 @@ function drawGrid(ctx) {
     for (let col = 0; col < game.grid.cols; col += 1) {
       const cell = getCellRect(col, row);
       const laneGradient = ctx.createLinearGradient(cell.x, cell.y, cell.x, cell.y + cell.height);
-      laneGradient.addColorStop(0, (row + col) % 2 === 0 ? "#96d963" : "#86c952");
-      laneGradient.addColorStop(1, (row + col) % 2 === 0 ? "#6ca53f" : "#629a38");
+      laneGradient.addColorStop(0, (row + col) % 2 === 0 ? "#98dc63" : "#87ca52");
+      laneGradient.addColorStop(1, (row + col) % 2 === 0 ? "#5f9838" : "#568c32");
       ctx.fillStyle = laneGradient;
       ctx.fillRect(cell.x, cell.y, cell.width, cell.height);
 
@@ -480,6 +509,12 @@ function drawGrid(ctx) {
         ctx.lineTo(cell.x + cell.width - 6, cell.y + stripe * (cell.height / 4));
         ctx.stroke();
       }
+
+      ctx.strokeStyle = "rgba(255,255,255,0.05)";
+      ctx.beginPath();
+      ctx.moveTo(cell.x + 8, cell.y + 10);
+      ctx.lineTo(cell.x + cell.width - 8, cell.y + 10);
+      ctx.stroke();
     }
   }
 

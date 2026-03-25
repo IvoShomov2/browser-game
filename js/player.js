@@ -18,10 +18,13 @@
     this.shake = 0;
     this.variant = Math.random() * Math.PI * 2;
     this.bobSpeed = 3 + Math.random() * 2;
+    this.recoil = 0;
+    this.expression = Math.random() * Math.PI * 2;
   }
 
   update(game, deltaTime) {
     this.shake = Math.max(0, this.shake - deltaTime * 4);
+    this.recoil = Math.max(0, this.recoil - deltaTime * 4.6);
 
     if (this.type === "peashooter") {
       this.reload -= deltaTime;
@@ -36,6 +39,7 @@
           )
         );
         this.reload = this.reloadTime;
+        this.recoil = 1;
         game.playSound("shoot");
       }
     }
@@ -83,9 +87,9 @@
 
   drawShadow(ctx, game) {
     ctx.save();
-    ctx.fillStyle = "rgba(0, 0, 0, 0.18)";
+    ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
     ctx.beginPath();
-    ctx.ellipse(0, game.cellHeight * 0.22, game.cellWidth * 0.18, game.cellHeight * 0.06, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, game.cellHeight * 0.23, game.cellWidth * 0.19, game.cellHeight * 0.065, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
   }
@@ -154,9 +158,13 @@
 
   drawPeashooter(ctx, game) {
     this.drawStem(ctx);
+    const recoilOffset = this.recoil * 6;
+
+    ctx.save();
+    ctx.translate(-recoilOffset, 0);
 
     const head = ctx.createRadialGradient(-8, -18, 8, 4, -16, 34);
-    head.addColorStop(0, "#abf07a");
+    head.addColorStop(0, "#b6f888");
     head.addColorStop(1, "#4b9e2a");
     ctx.fillStyle = head;
     ctx.beginPath();
@@ -168,20 +176,27 @@
     ctx.arc(18, -16, 10, 0, Math.PI * 2);
     ctx.fill();
 
-    const muzzle = ctx.createLinearGradient(12, -23, 38, -13);
-    muzzle.addColorStop(0, "#94e067");
-    muzzle.addColorStop(1, "#4f9f2b");
+    const muzzle = ctx.createLinearGradient(12, -23, 42, -13);
+    muzzle.addColorStop(0, "#a2eb74");
+    muzzle.addColorStop(1, "#4c9d2a");
     ctx.fillStyle = muzzle;
     ctx.beginPath();
-    ctx.roundRect(10, -26, 28, 18, 9);
+    ctx.roundRect(10, -27, 31, 20, 10);
     ctx.fill();
 
-    ctx.fillStyle = "#2b5c19";
+    ctx.fillStyle = "#2c5d1a";
     ctx.beginPath();
-    ctx.arc(36, -17, 6, 0, Math.PI * 2);
+    ctx.arc(39, -17, 6.5, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.fillStyle = "#1d2116";
+    if (this.recoil > 0.08) {
+      ctx.fillStyle = `rgba(212,255,173, ${this.recoil * 0.8})`;
+      ctx.beginPath();
+      ctx.arc(45, -17, 8 + this.recoil * 10, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    ctx.fillStyle = "#182112";
     ctx.beginPath();
     ctx.arc(-2, -22, 3.2, 0, Math.PI * 2);
     ctx.fill();
@@ -191,18 +206,20 @@
     ctx.beginPath();
     ctx.arc(-8, -26, 8, Math.PI * 1.1, Math.PI * 1.8);
     ctx.stroke();
+    ctx.restore();
   }
 
   drawSunflower(ctx) {
     this.drawStem(ctx);
+    const petalSpin = Math.sin(this.expression + performance.now() * 0.002) * 0.08;
 
     for (let index = 0; index < 12; index += 1) {
-      const angle = (Math.PI * 2 * index) / 12;
+      const angle = (Math.PI * 2 * index) / 12 + petalSpin;
       const petalX = Math.cos(angle) * 24;
       const petalY = Math.sin(angle) * 24 - 12;
       const petalGradient = ctx.createLinearGradient(petalX, petalY - 10, petalX, petalY + 10);
-      petalGradient.addColorStop(0, "#ffe392");
-      petalGradient.addColorStop(1, "#f0a930");
+      petalGradient.addColorStop(0, "#ffe99d");
+      petalGradient.addColorStop(1, "#efa72d");
       ctx.fillStyle = petalGradient;
       ctx.beginPath();
       ctx.ellipse(petalX, petalY, 10, 18, angle, 0, Math.PI * 2);
@@ -210,11 +227,16 @@
     }
 
     const face = ctx.createRadialGradient(-4, -18, 4, 0, -12, 24);
-    face.addColorStop(0, "#8d5d31");
-    face.addColorStop(1, "#54341b");
+    face.addColorStop(0, "#956336");
+    face.addColorStop(1, "#553419");
     ctx.fillStyle = face;
     ctx.beginPath();
     ctx.arc(0, -12, 22, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = "rgba(255, 232, 173, 0.35)";
+    ctx.beginPath();
+    ctx.arc(0, -12, 27, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.fillStyle = "#f9f0df";
@@ -237,6 +259,9 @@
   }
 
   drawWallnut(ctx, game) {
+    const wobble = Math.sin(performance.now() * 0.0025 + this.variant) * 0.02;
+    ctx.rotate(wobble);
+
     const shell = ctx.createLinearGradient(0, -30, 0, 44);
     shell.addColorStop(0, "#bc8550");
     shell.addColorStop(1, "#774622");
@@ -292,12 +317,14 @@ class Projectile {
     this.speed = 330;
     this.active = true;
     this.trail = [];
+    this.spin = Math.random() * Math.PI * 2;
   }
 
   update(game, deltaTime) {
     this.trail.push({ x: this.x, y: this.y, age: 1 });
-    this.trail = this.trail.slice(-5).map((point) => ({ ...point, age: point.age - 0.18 }));
+    this.trail = this.trail.slice(-6).map((point) => ({ ...point, age: point.age - 0.16 }));
     this.x += this.speed * deltaTime;
+    this.spin += deltaTime * 10;
 
     const target = game.findProjectileTarget(this);
     if (target) {
@@ -317,19 +344,27 @@ class Projectile {
     ctx.save();
 
     this.trail.forEach((point, index) => {
-      ctx.fillStyle = `rgba(147, 255, 118, ${Math.max(0, point.age * 0.16)})`;
+      ctx.fillStyle = `rgba(147, 255, 118, ${Math.max(0, point.age * 0.18)})`;
       ctx.beginPath();
       ctx.arc(point.x, point.y, this.radius - index * 0.9, 0, Math.PI * 2);
       ctx.fill();
     });
 
-    const gradient = ctx.createRadialGradient(this.x - 2, this.y - 2, 2, this.x, this.y, this.radius + 2);
-    gradient.addColorStop(0, "#d4ffad");
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.spin);
+    const gradient = ctx.createRadialGradient(-2, -2, 2, 0, 0, this.radius + 2);
+    gradient.addColorStop(0, "#e5ffbc");
     gradient.addColorStop(1, "#67bf36");
     ctx.fillStyle = gradient;
     ctx.beginPath();
-    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+    ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
     ctx.fill();
+
+    ctx.strokeStyle = "rgba(255,255,255,0.3)";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(0, 0, this.radius - 1.5, -1.2, 0.7);
+    ctx.stroke();
 
     ctx.restore();
   }
