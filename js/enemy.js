@@ -2,15 +2,15 @@
   constructor(lane, level, canvasWidth) {
     this.lane = lane;
     this.level = level;
-    this.width = 48;
-    this.height = 72;
-    this.x = canvasWidth + 90 + Math.random() * 160;
+    this.width = 54;
+    this.height = 82;
+    this.x = canvasWidth + 90 + Math.random() * 180;
     this.y = 0;
-    this.baseSpeed = 22 + level * 1.8 + Math.random() * 7;
+    this.baseSpeed = 22 + level * 1.9 + Math.random() * 7;
     this.speedMultiplier = 1;
-    this.health = 110 + level * 18;
+    this.health = 120 + level * 20;
     this.maxHealth = this.health;
-    this.biteDamage = 18 + level * 1.7;
+    this.biteDamage = 18 + level * 1.8;
     this.biteCooldown = 0;
     this.targetPlant = null;
     this.stateTimer = 0;
@@ -18,6 +18,7 @@
     this.respawnsRemaining = level >= 3 && Math.random() > 0.55 ? 1 : 0;
     this.hasAwardedScore = false;
     this.removed = false;
+    this.walkCycle = Math.random() * Math.PI * 2;
 
     this.fsm = new FiniteStateMachine(this, "SPAWN");
     this.setupStates();
@@ -62,7 +63,7 @@
             const targetBounds = enemy.targetPlant.getBounds(game);
             const frontX = targetBounds.x + targetBounds.width;
             if (enemy.x > frontX + 6) {
-              enemy.moveBy(-enemy.baseSpeed * 1.08, deltaTime);
+              enemy.moveBy(-enemy.baseSpeed * 1.05, deltaTime);
             }
           } else {
             enemy.moveBy(-enemy.baseSpeed * 0.85, deltaTime);
@@ -88,7 +89,7 @@
           if (enemy.targetPlant && enemy.biteCooldown <= 0) {
             enemy.targetPlant.takeDamage(enemy.biteDamage);
             enemy.biteCooldown = 0.75;
-            game.playSound(140, 0.045, "sawtooth");
+            game.playSound("bite");
           }
 
           if (!enemy.targetPlant) {
@@ -103,7 +104,7 @@
       })
       .addState("RAGE", {
         update: (enemy, game, deltaTime) => {
-          enemy.speedMultiplier = 1.8;
+          enemy.speedMultiplier = 1.85;
           enemy.targetPlant = game.findPlantAhead(enemy);
           enemy.moveBy(-enemy.baseSpeed * enemy.speedMultiplier, deltaTime);
         },
@@ -120,7 +121,7 @@
         },
         update: (enemy, game, deltaTime) => {
           enemy.stateTimer -= deltaTime;
-          enemy.moveBy(enemy.baseSpeed * 2.1, deltaTime);
+          enemy.moveBy(enemy.baseSpeed * 2.15, deltaTime);
           if (enemy.stateTimer <= 0) {
             enemy.fsm.setState("WALK", game);
           }
@@ -136,7 +137,7 @@
             enemy.hasAwardedScore = true;
             game.score += 35;
             game.zombiesDefeated += 1;
-            game.playSound(96, 0.09, "triangle");
+            game.playSound("death");
           }
         },
         update: (enemy, game, deltaTime) => {
@@ -171,6 +172,7 @@
   update(game, deltaTime) {
     this.y = game.getLaneCenter(this.lane);
     this.hitFlash = Math.max(0, this.hitFlash - deltaTime);
+    this.walkCycle += deltaTime * (this.baseSpeed * this.speedMultiplier * 0.06 + 3.8);
     this.fsm.update(game, deltaTime);
   }
 
@@ -201,59 +203,103 @@
   draw(ctx) {
     const isGhosted = this.fsm.matches("DEAD");
     const bodyColor = this.fsm.matches("RAGE")
-      ? "#d94b25"
+      ? "#c94d27"
       : this.fsm.matches("FLEE")
-        ? "#efb44a"
+        ? "#d8a24b"
         : this.fsm.matches("SPAWN", "RESPAWN")
-          ? "#9b85ff"
-          : "#5b7360";
+          ? "#8f7dff"
+          : "#5a7562";
+    const armSwing = Math.sin(this.walkCycle) * 8;
+    const legSwing = Math.sin(this.walkCycle + Math.PI) * 7;
+    const headTilt = Math.sin(this.walkCycle * 0.7) * 0.05;
 
     ctx.save();
     ctx.translate(this.x, this.y);
     ctx.globalAlpha = isGhosted ? 0.28 : 1;
 
+    ctx.fillStyle = "rgba(0,0,0,0.22)";
+    ctx.beginPath();
+    ctx.ellipse(0, 40, 22, 8, 0, 0, Math.PI * 2);
+    ctx.fill();
+
     if (this.hitFlash > 0) {
-      ctx.fillStyle = "#fff5db";
+      ctx.fillStyle = "rgba(255, 245, 219, 0.45)";
       ctx.beginPath();
-      ctx.arc(0, -12, 28, 0, Math.PI * 2);
+      ctx.arc(0, -12, 34, 0, Math.PI * 2);
       ctx.fill();
     }
 
-    ctx.fillStyle = bodyColor;
-    ctx.fillRect(-14, -8, 28, 42);
-
-    ctx.fillStyle = "#7d5a43";
+    ctx.save();
+    ctx.rotate(headTilt);
+    ctx.fillStyle = "#8b6b54";
     ctx.beginPath();
-    ctx.arc(0, -20, 18, 0, Math.PI * 2);
+    ctx.arc(0, -26, 18, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.fillStyle = "#f8f4e6";
+    ctx.fillStyle = "#f6f1e5";
     ctx.beginPath();
-    ctx.arc(-6, -22, 4, 0, Math.PI * 2);
-    ctx.arc(6, -22, 4, 0, Math.PI * 2);
+    ctx.arc(-6, -28, 4.2, 0, Math.PI * 2);
+    ctx.arc(6, -28, 4.2, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.fillStyle = "#31251d";
+    ctx.fillStyle = "#2a221b";
     ctx.beginPath();
-    ctx.arc(-6, -22, 1.8, 0, Math.PI * 2);
-    ctx.arc(6, -22, 1.8, 0, Math.PI * 2);
+    ctx.arc(-6, -28, 1.9, 0, Math.PI * 2);
+    ctx.arc(6, -28, 1.9, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.strokeStyle = "#31251d";
+    ctx.strokeStyle = "#2a221b";
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(-7, -12);
-    ctx.lineTo(8, -10);
+    ctx.moveTo(-8, -18);
+    ctx.lineTo(9, -15);
     ctx.stroke();
 
-    ctx.fillStyle = "#422a15";
-    ctx.fillRect(-16, 34, 10, 18);
-    ctx.fillRect(6, 34, 10, 18);
+    if (this.fsm.matches("EAT")) {
+      ctx.fillStyle = "#ede1c5";
+      ctx.fillRect(-4, -10, 12, 8);
+    }
+    ctx.restore();
 
-    ctx.fillStyle = "rgba(31, 28, 22, 0.4)";
-    ctx.fillRect(-20, -38, 40, 6);
-    ctx.fillStyle = this.health / this.maxHealth > 0.45 ? "#7fba43" : "#ef8f2f";
-    ctx.fillRect(-20, -38, 40 * Math.max(0, this.health / this.maxHealth), 6);
+    ctx.fillStyle = bodyColor;
+    ctx.fillRect(-14, -6, 28, 44);
+    ctx.fillStyle = "#4d2d45";
+    ctx.fillRect(-14, 2, 28, 14);
+    ctx.fillStyle = "#c1433c";
+    ctx.beginPath();
+    ctx.moveTo(0, -6);
+    ctx.lineTo(-4, 16);
+    ctx.lineTo(4, 16);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = "#8b6b54";
+    ctx.lineWidth = 8;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(-12, -1);
+    ctx.lineTo(-25, 10 + armSwing);
+    ctx.moveTo(12, -1);
+    ctx.lineTo(25, 10 - armSwing);
+    ctx.stroke();
+
+    ctx.strokeStyle = "#3d2814";
+    ctx.lineWidth = 9;
+    ctx.beginPath();
+    ctx.moveTo(-7, 38);
+    ctx.lineTo(-9, 57 + legSwing);
+    ctx.moveTo(7, 38);
+    ctx.lineTo(9, 57 - legSwing);
+    ctx.stroke();
+
+    ctx.fillStyle = "#26190d";
+    ctx.fillRect(-16, 56 + legSwing, 12, 6);
+    ctx.fillRect(4, 56 - legSwing, 12, 6);
+
+    ctx.fillStyle = "rgba(22, 20, 15, 0.42)";
+    ctx.fillRect(-20, -48, 40, 6);
+    ctx.fillStyle = this.health / this.maxHealth > 0.45 ? "#87d556" : "#ffb347";
+    ctx.fillRect(-20, -48, 40 * Math.max(0, this.health / this.maxHealth), 6);
 
     ctx.restore();
   }

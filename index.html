@@ -11,41 +11,90 @@
     <canvas id="gameCanvas" aria-label="Garden Last Stand canvas"></canvas>
 
     <header id="hud">
-      <div class="hud-group"><span class="hud-label">Base</span><strong id="healthValue">100</strong></div>
-      <div class="hud-group"><span class="hud-label">Sun</span><strong id="sunValue">150</strong></div>
-      <div class="hud-group"><span class="hud-label">Score</span><strong id="scoreValue">0</strong></div>
-      <div class="hud-group"><span class="hud-label">Level</span><strong id="levelValue">1</strong></div>
-      <div class="hud-group"><span class="hud-label">Wave</span><strong id="waveValue">1</strong></div>
-      <div class="hud-group"><span class="hud-label">Zoom</span><strong id="zoomValue">1.00x</strong></div>
-      <div class="hud-group"><span class="hud-label">State</span><strong id="statusValue">Menu</strong></div>
+      <div class="hud-group">
+        <span class="hud-label">Base Integrity</span>
+        <strong id="healthValue">100</strong>
+      </div>
+      <div class="hud-group">
+        <span class="hud-label">Sun Reserve</span>
+        <strong id="sunValue">150</strong>
+      </div>
+      <div class="hud-group">
+        <span class="hud-label">Score</span>
+        <strong id="scoreValue">0</strong>
+      </div>
+      <div class="hud-group">
+        <span class="hud-label">Level</span>
+        <strong id="levelValue">1</strong>
+      </div>
+      <div class="hud-group">
+        <span class="hud-label">Wave</span>
+        <strong id="waveValue">1</strong>
+      </div>
+      <div class="hud-group">
+        <span class="hud-label">Zoom</span>
+        <strong id="zoomValue">1.00x</strong>
+      </div>
+      <div class="hud-group">
+        <span class="hud-label">State</span>
+        <strong id="statusValue">Menu</strong>
+      </div>
     </header>
 
     <aside id="sidebar">
+      <div class="sidebar-card brand-card">
+        <p class="eyebrow small">Garden Defense Protocol</p>
+        <h2>Garden Last Stand</h2>
+        <p class="sidebar-text">A polished lane-defense game with hand-drawn canvas art, layered audio, and FSM-driven zombies.</p>
+      </div>
+
       <div class="sidebar-card">
         <p class="sidebar-title">Seed Pack</p>
-        <button class="seed-button active" data-seed="peashooter">Peashooter <span>100 sun</span></button>
-        <button class="seed-button" data-seed="sunflower">Sunflower <span>50 sun</span></button>
-        <button class="seed-button" data-seed="wallnut">Wallnut <span>75 sun</span></button>
+        <button class="seed-button active" data-seed="peashooter">
+          <span class="seed-main">
+            <strong>Peashooter</strong>
+            <small>Fast ranged pressure</small>
+          </span>
+          <span class="seed-cost">100</span>
+        </button>
+        <button class="seed-button" data-seed="sunflower">
+          <span class="seed-main">
+            <strong>Sunflower</strong>
+            <small>Generates extra sun</small>
+          </span>
+          <span class="seed-cost">50</span>
+        </button>
+        <button class="seed-button" data-seed="wallnut">
+          <span class="seed-main">
+            <strong>Wallnut</strong>
+            <small>Heavy front-line blocker</small>
+          </span>
+          <span class="seed-cost">75</span>
+        </button>
       </div>
 
-      <div class="sidebar-card">
+      <div class="sidebar-card status-card">
+        <p class="sidebar-title">Commander Feed</p>
+        <p id="tipLine" class="sidebar-text">Build a balanced defense: economy first, then damage, then blockers.</p>
+      </div>
+
+      <div class="sidebar-card controls-card">
         <p class="sidebar-title">Controls</p>
-        <p class="sidebar-text">Click a tile to plant.</p>
-        <p class="sidebar-text">Right-click a tile to dig up a plant.</p>
-        <p class="sidebar-text">Press 1, 2, 3 or use the wheel to switch seeds.</p>
-        <p class="sidebar-text">ESC pauses. M toggles sound. C drops a bonus sun.</p>
+        <p class="sidebar-text">Click to plant. Right-click to dig up.</p>
+        <p class="sidebar-text">1, 2, 3 switch seeds. Mouse wheel also cycles.</p>
+        <p class="sidebar-text">Middle mouse scares weak zombies. ESC pauses. M toggles sound.</p>
       </div>
 
-      <div class="sidebar-card">
+      <div class="sidebar-card sound-card">
         <button id="muteButton" class="secondary-button">Sound: On</button>
       </div>
     </aside>
 
     <section id="menuOverlay" class="overlay visible">
-      <div class="panel">
-        <p class="eyebrow">HTML5 Canvas Defense Game</p>
+      <div class="panel hero-panel">
+        <p class="eyebrow">Premium Canvas Lane Defense</p>
         <h1>Garden Last Stand</h1>
-        <p>Place plant defenders, collect sun energy, and hold five lanes against zombie waves. The zombie behavior is driven by a reusable finite state machine.</p>
+        <p>Command a cinematic garden defense with stronger visuals, reactive UI, deeper feedback, and zombies driven by a reusable finite state machine.</p>
         <button id="playButton" class="primary-button">Play Game</button>
         <p class="hint">Zombie FSM states: SPAWN, WALK, TARGET, EAT, RAGE, FLEE, DEAD, RESPAWN.</p>
       </div>
@@ -54,8 +103,8 @@
     <section id="pauseOverlay" class="overlay">
       <div class="panel">
         <p class="eyebrow">Game Paused</p>
-        <h2>Take a Breath</h2>
-        <p>Press ESC to continue or use the button below.</p>
+        <h2>Defense On Hold</h2>
+        <p>Take a breath, review the lanes, then jump back in.</p>
         <button id="resumeButton" class="primary-button">Resume</button>
       </div>
     </section>

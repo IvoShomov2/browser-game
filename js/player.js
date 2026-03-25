@@ -16,6 +16,8 @@
     this.highlight = config.highlight;
     this.size = config.size || 0.72;
     this.shake = 0;
+    this.variant = Math.random() * Math.PI * 2;
+    this.bobSpeed = 3 + Math.random() * 2;
   }
 
   update(game, deltaTime) {
@@ -28,13 +30,13 @@
         game.projectiles.push(
           new Projectile(
             position.x + game.cellWidth * 0.18,
-            position.y - game.cellHeight * 0.04,
+            position.y - game.cellHeight * 0.05,
             this.row,
             this.damage
           )
         );
         this.reload = this.reloadTime;
-        game.playSound(520, 0.045, "square");
+        game.playSound("shoot");
       }
     }
 
@@ -42,9 +44,9 @@
       this.sunTimer -= deltaTime;
       if (this.sunTimer <= 0) {
         const position = this.getCenter(game);
-        game.spawnSun(position.x, position.y - 24, 25, false);
+        game.spawnSun(position.x, position.y - 28, 25, false);
         this.sunTimer = this.sunInterval;
-        game.playSound(710, 0.05, "sine");
+        game.playSound("sun-create");
       }
     }
   }
@@ -79,78 +81,204 @@
     };
   }
 
+  drawShadow(ctx, game, center) {
+    ctx.save();
+    ctx.fillStyle = "rgba(0, 0, 0, 0.18)";
+    ctx.beginPath();
+    ctx.ellipse(0, game.cellHeight * 0.22, game.cellWidth * 0.18, game.cellHeight * 0.06, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
   draw(ctx, game) {
     const cell = game.getCellRect(this.col, this.row);
     const center = this.getCenter(game);
-    const bounce = Math.sin(game.totalTime * 5 + this.col + this.row) * 2;
+    const bounce = Math.sin(game.totalTime * this.bobSpeed + this.variant) * 3;
+    const tilt = Math.sin(game.totalTime * 1.6 + this.variant) * 0.04;
     const scale = 1 - this.shake * 0.06;
 
     ctx.save();
     ctx.translate(center.x, center.y + bounce);
+    this.drawShadow(ctx, game, center);
     ctx.scale(scale, scale);
+    ctx.rotate(tilt);
 
     if (this.type === "peashooter") {
-      ctx.fillStyle = this.color;
-      ctx.beginPath();
-      ctx.arc(0, 10, game.cellWidth * 0.16, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.fillStyle = this.highlight;
-      ctx.beginPath();
-      ctx.arc(0, -10, game.cellWidth * 0.2, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.fillRect(-8, -14, 26, 10);
-
-      ctx.fillStyle = "#2d2b1f";
-      ctx.beginPath();
-      ctx.arc(16, -9, 4, 0, Math.PI * 2);
-      ctx.fill();
+      this.drawPeashooter(ctx, game);
     }
 
     if (this.type === "sunflower") {
-      for (let index = 0; index < 10; index += 1) {
-        const angle = (Math.PI * 2 * index) / 10;
-        const petalX = Math.cos(angle) * 18;
-        const petalY = Math.sin(angle) * 18;
-        ctx.fillStyle = this.color;
-        ctx.beginPath();
-        ctx.ellipse(petalX, petalY - 3, 8, 14, angle, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      ctx.fillStyle = this.highlight;
-      ctx.beginPath();
-      ctx.arc(0, 0, 18, 0, Math.PI * 2);
-      ctx.fill();
+      this.drawSunflower(ctx, game);
     }
 
     if (this.type === "wallnut") {
-      ctx.fillStyle = this.color;
-      ctx.beginPath();
-      ctx.ellipse(0, 6, game.cellWidth * 0.18, game.cellHeight * 0.26, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.fillStyle = this.highlight;
-      ctx.beginPath();
-      ctx.arc(-8, -6, 3.5, 0, Math.PI * 2);
-      ctx.arc(8, -6, 3.5, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.strokeStyle = "#6c4020";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(0, 12, 10, 0.2, Math.PI - 0.2);
-      ctx.stroke();
+      this.drawWallnut(ctx, game);
     }
 
     ctx.restore();
 
     const healthRatio = this.health / this.maxHealth;
-    ctx.fillStyle = "rgba(31, 28, 22, 0.35)";
-    ctx.fillRect(cell.x + 12, cell.y + cell.height - 12, cell.width - 24, 6);
-    ctx.fillStyle = healthRatio > 0.45 ? "#7fba43" : "#ef8f2f";
-    ctx.fillRect(cell.x + 12, cell.y + cell.height - 12, (cell.width - 24) * healthRatio, 6);
+    ctx.fillStyle = "rgba(22, 20, 15, 0.42)";
+    ctx.fillRect(cell.x + 14, cell.y + cell.height - 14, cell.width - 28, 7);
+    ctx.fillStyle = healthRatio > 0.45 ? "#87d556" : "#ffb347";
+    ctx.fillRect(cell.x + 14, cell.y + cell.height - 14, (cell.width - 28) * healthRatio, 7);
+  }
+
+  drawStem(ctx, game) {
+    const stemGradient = ctx.createLinearGradient(0, 34, 0, -18);
+    stemGradient.addColorStop(0, "#2f6a18");
+    stemGradient.addColorStop(1, "#84ce56");
+    ctx.strokeStyle = stemGradient;
+    ctx.lineWidth = 10;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(0, 32);
+    ctx.quadraticCurveTo(-4, 8, 0, -18);
+    ctx.stroke();
+
+    ctx.fillStyle = "#4e982d";
+    ctx.beginPath();
+    ctx.ellipse(-16, 10, 16, 8, -0.45, 0, Math.PI * 2);
+    ctx.ellipse(16, 8, 16, 8, 0.45, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = "rgba(255,255,255,0.18)";
+    ctx.lineWidth = 1.3;
+    ctx.beginPath();
+    ctx.moveTo(-27, 9);
+    ctx.lineTo(-10, 10);
+    ctx.moveTo(10, 9);
+    ctx.lineTo(27, 8);
+    ctx.stroke();
+  }
+
+  drawPeashooter(ctx, game) {
+    this.drawStem(ctx, game);
+
+    const head = ctx.createRadialGradient(-8, -18, 8, 4, -16, 34);
+    head.addColorStop(0, "#abf07a");
+    head.addColorStop(1, "#4b9e2a");
+    ctx.fillStyle = head;
+    ctx.beginPath();
+    ctx.arc(0, -18, 24, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = "#5aa933";
+    ctx.beginPath();
+    ctx.arc(18, -16, 10, 0, Math.PI * 2);
+    ctx.fill();
+
+    const muzzle = ctx.createLinearGradient(12, -23, 38, -13);
+    muzzle.addColorStop(0, "#94e067");
+    muzzle.addColorStop(1, "#4f9f2b");
+    ctx.fillStyle = muzzle;
+    ctx.beginPath();
+    ctx.roundRect(10, -26, 28, 18, 9);
+    ctx.fill();
+
+    ctx.fillStyle = "#2b5c19";
+    ctx.beginPath();
+    ctx.arc(36, -17, 6, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = "#1d2116";
+    ctx.beginPath();
+    ctx.arc(-2, -22, 3.2, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = "rgba(255,255,255,0.25)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(-8, -26, 8, Math.PI * 1.1, Math.PI * 1.8);
+    ctx.stroke();
+  }
+
+  drawSunflower(ctx, game) {
+    this.drawStem(ctx, game);
+
+    for (let index = 0; index < 12; index += 1) {
+      const angle = (Math.PI * 2 * index) / 12;
+      const petalX = Math.cos(angle) * 24;
+      const petalY = Math.sin(angle) * 24 - 12;
+      const petalGradient = ctx.createLinearGradient(petalX, petalY - 10, petalX, petalY + 10);
+      petalGradient.addColorStop(0, "#ffe392");
+      petalGradient.addColorStop(1, "#f0a930");
+      ctx.fillStyle = petalGradient;
+      ctx.beginPath();
+      ctx.ellipse(petalX, petalY, 10, 18, angle, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    const face = ctx.createRadialGradient(-4, -18, 4, 0, -12, 24);
+    face.addColorStop(0, "#8d5d31");
+    face.addColorStop(1, "#54341b");
+    ctx.fillStyle = face;
+    ctx.beginPath();
+    ctx.arc(0, -12, 22, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = "#f9f0df";
+    ctx.beginPath();
+    ctx.arc(-7, -16, 4, 0, Math.PI * 2);
+    ctx.arc(7, -16, 4, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = "#1c1712";
+    ctx.beginPath();
+    ctx.arc(-7, -16, 1.8, 0, Math.PI * 2);
+    ctx.arc(7, -16, 1.8, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = "#2d2017";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(0, -9, 10, 0.25, Math.PI - 0.25);
+    ctx.stroke();
+  }
+
+  drawWallnut(ctx, game) {
+    const shell = ctx.createLinearGradient(0, -30, 0, 44);
+    shell.addColorStop(0, "#bc8550");
+    shell.addColorStop(1, "#774622");
+    ctx.fillStyle = shell;
+    ctx.beginPath();
+    ctx.ellipse(0, 6, game.cellWidth * 0.2, game.cellHeight * 0.28, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = "rgba(255,255,255,0.16)";
+    ctx.beginPath();
+    ctx.ellipse(-8, -12, 10, 18, -0.4, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = "#251c15";
+    ctx.beginPath();
+    ctx.arc(-9, -8, 3.2, 0, Math.PI * 2);
+    ctx.arc(9, -8, 3.2, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = "#251c15";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(0, 9, 9, 0.2, Math.PI - 0.2);
+    ctx.stroke();
+
+    if (this.health < this.maxHealth * 0.7) {
+      ctx.strokeStyle = "#5f3417";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(-4, 0);
+      ctx.lineTo(-14, 12);
+      ctx.lineTo(-7, 20);
+      ctx.stroke();
+    }
+
+    if (this.health < this.maxHealth * 0.35) {
+      ctx.beginPath();
+      ctx.moveTo(5, -2);
+      ctx.lineTo(16, 8);
+      ctx.lineTo(10, 18);
+      ctx.stroke();
+    }
   }
 }
 
@@ -161,11 +289,14 @@ class Projectile {
     this.lane = lane;
     this.damage = damage;
     this.radius = 8;
-    this.speed = 310;
+    this.speed = 330;
     this.active = true;
+    this.trail = [];
   }
 
   update(game, deltaTime) {
+    this.trail.push({ x: this.x, y: this.y, age: 1 });
+    this.trail = this.trail.slice(-5).map((point) => ({ ...point, age: point.age - 0.18 }));
     this.x += this.speed * deltaTime;
 
     const target = game.findProjectileTarget(this);
@@ -174,7 +305,7 @@ class Projectile {
       target.hitFlash = 0.25;
       this.active = false;
       game.score += 4;
-      game.playSound(280, 0.03, "triangle");
+      game.playSound("impact");
     }
 
     if (this.x > game.canvas.width + 20) {
@@ -184,10 +315,22 @@ class Projectile {
 
   draw(ctx) {
     ctx.save();
-    ctx.fillStyle = "#9cdc5b";
+
+    this.trail.forEach((point, index) => {
+      ctx.fillStyle = `rgba(147, 255, 118, ${Math.max(0, point.age * 0.16)})`;
+      ctx.beginPath();
+      ctx.arc(point.x, point.y, this.radius - index * 0.9, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    const gradient = ctx.createRadialGradient(this.x - 2, this.y - 2, 2, this.x, this.y, this.radius + 2);
+    gradient.addColorStop(0, "#d4ffad");
+    gradient.addColorStop(1, "#67bf36");
+    ctx.fillStyle = gradient;
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
     ctx.fill();
+
     ctx.restore();
   }
 }
@@ -197,12 +340,12 @@ class SunToken {
     this.x = x;
     this.y = y;
     this.value = value;
-    this.radius = 20;
+    this.radius = 22;
     this.drifting = drifting;
     this.age = 0;
     this.life = drifting ? 8.5 : 10;
     this.floatOffset = Math.random() * Math.PI * 2;
-    this.vy = drifting ? 22 + Math.random() * 18 : 0;
+    this.vy = drifting ? 20 + Math.random() * 20 : 0;
     this.active = true;
   }
 
@@ -222,17 +365,31 @@ class SunToken {
   }
 
   draw(ctx, totalTime) {
-    const pulse = Math.sin(totalTime * 4 + this.floatOffset) * 2;
+    const pulse = Math.sin(totalTime * 4 + this.floatOffset) * 3;
 
     ctx.save();
     ctx.translate(this.x, this.y + pulse);
-    ctx.fillStyle = "#ffd457";
+
+    for (let index = 0; index < 10; index += 1) {
+      const angle = (Math.PI * 2 * index) / 10;
+      ctx.strokeStyle = "rgba(255, 217, 102, 0.45)";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(angle) * 18, Math.sin(angle) * 18);
+      ctx.lineTo(Math.cos(angle) * 28, Math.sin(angle) * 28);
+      ctx.stroke();
+    }
+
+    const glow = ctx.createRadialGradient(-4, -5, 4, 0, 0, this.radius + 4);
+    glow.addColorStop(0, "#fff7bf");
+    glow.addColorStop(1, "#f7b72f");
+    ctx.fillStyle = glow;
     ctx.beginPath();
     ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.fillStyle = "#fff6de";
-    ctx.font = "bold 14px Trebuchet MS";
+    ctx.fillStyle = "#fff5d8";
+    ctx.font = "bold 16px Trebuchet MS";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText("+", 0, 1);
