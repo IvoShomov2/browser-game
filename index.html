@@ -9,116 +9,144 @@
 <body>
   <div id="gameContainer">
     <canvas id="gameCanvas" aria-label="Garden Last Stand canvas"></canvas>
+    <div id="entityLayer" aria-hidden="true"></div>
 
-    <header id="hud">
-      <div class="hud-group">
-        <span class="hud-label">Base Integrity</span>
-        <strong id="healthValue">100</strong>
-      </div>
-      <div class="hud-group">
-        <span class="hud-label">Sun Reserve</span>
-        <strong id="sunValue">150</strong>
-      </div>
-      <div class="hud-group">
-        <span class="hud-label">Score</span>
-        <strong id="scoreValue">0</strong>
-      </div>
-      <div class="hud-group">
-        <span class="hud-label">Level</span>
-        <strong id="levelValue">1</strong>
-      </div>
-      <div class="hud-group">
-        <span class="hud-label">Wave</span>
-        <strong id="waveValue">1</strong>
-      </div>
-      <div class="hud-group">
-        <span class="hud-label">Zoom</span>
-        <strong id="zoomValue">1.00x</strong>
-      </div>
-      <div class="hud-group">
-        <span class="hud-label">State</span>
-        <strong id="statusValue">Menu</strong>
-      </div>
-    </header>
+    <div id="uiShell">
+      <header id="hud">
+        <div class="hud-group">
+          <span class="hud-label">Base Integrity</span>
+          <strong id="healthValue">100</strong>
+        </div>
+        <div class="hud-group">
+          <span class="hud-label">Sun Reserve</span>
+          <strong id="sunValue">150</strong>
+        </div>
+        <div class="hud-group">
+          <span class="hud-label">Score</span>
+          <strong id="scoreValue">0</strong>
+        </div>
+        <div class="hud-group">
+          <span class="hud-label">Level</span>
+          <strong id="levelValue">1</strong>
+        </div>
+        <div class="hud-group">
+          <span class="hud-label">Wave</span>
+          <strong id="waveValue">1</strong>
+        </div>
+        <div class="hud-group">
+          <span class="hud-label">Zoom</span>
+          <strong id="zoomValue">1.00x</strong>
+        </div>
+        <div class="hud-group">
+          <span class="hud-label">State</span>
+          <strong id="statusValue">Menu</strong>
+        </div>
+      </header>
 
-    <aside id="sidebar">
-      <div class="sidebar-card brand-card">
-        <p class="eyebrow small">Garden Defense Protocol</p>
-        <h2>Garden Last Stand</h2>
-        <p class="sidebar-text">A polished lane-defense game with hand-drawn canvas art, layered audio, and FSM-driven zombies.</p>
-      </div>
+      <aside id="sidebar">
+        <div class="sidebar-card brand-card">
+          <p class="eyebrow small">Garden Defense Protocol</p>
+          <p class="sidebar-text">A polished lane-defense game with hand-drawn canvas art, layered audio, and FSM-driven zombies.</p>
+        </div>
 
-      <div class="sidebar-card">
-        <p class="sidebar-title">Seed Pack</p>
-        <button class="seed-button active" data-seed="peashooter">
-          <span class="seed-main">
-            <strong>Peashooter</strong>
-            <small>Fast ranged pressure</small>
-          </span>
-          <span class="seed-cost">100</span>
-        </button>
-        <button class="seed-button" data-seed="sunflower">
-          <span class="seed-main">
-            <strong>Sunflower</strong>
-            <small>Generates extra sun</small>
-          </span>
-          <span class="seed-cost">50</span>
-        </button>
-        <button class="seed-button" data-seed="wallnut">
-          <span class="seed-main">
-            <strong>Wallnut</strong>
-            <small>Heavy front-line blocker</small>
-          </span>
-          <span class="seed-cost">75</span>
-        </button>
-      </div>
+        <div class="sidebar-card">
+          <p class="sidebar-title">Seed Pack</p>
+          <button class="seed-button active" data-seed="peashooter">
+            <span class="seed-main">
+              <strong>Peashooter</strong>
+              <small>Fast ranged pressure</small>
+            </span>
+            <span class="seed-cost">100</span>
+          </button>
+          <button class="seed-button" data-seed="sunflower">
+            <span class="seed-main">
+              <strong>Sunflower</strong>
+              <small>Generates extra sun</small>
+            </span>
+            <span class="seed-cost">50</span>
+          </button>
+          <button class="seed-button" data-seed="wallnut">
+            <span class="seed-main">
+              <strong>Wallnut</strong>
+              <small>Heavy front-line blocker</small>
+            </span>
+            <span class="seed-cost">75</span>
+          </button>
+        </div>
 
-      <div class="sidebar-card status-card">
-        <p class="sidebar-title">Commander Feed</p>
-        <p id="tipLine" class="sidebar-text">Build a balanced defense: economy first, then damage, then blockers.</p>
-      </div>
+        <div class="sidebar-card status-card">
+          <p class="sidebar-title">Commander Feed</p>
+          <p id="tipLine" class="sidebar-text">Build a balanced defense: economy first, then damage, then blockers.</p>
+        </div>
 
-      <div class="sidebar-card controls-card">
-        <p class="sidebar-title">Controls</p>
-        <div class="control-line">
-          <span class="control-key">Left Click</span>
-          <span class="control-desc">Plant on a tile</span>
+        <div id="controlsCard" class="sidebar-card controls-card">
+          <p class="sidebar-title">Controls</p>
+          <div class="control-line">
+            <span class="control-key">Left Click</span>
+            <span class="control-desc">Plant on a tile</span>
+          </div>
+          <div class="control-line">
+            <span class="control-key">Right Click</span>
+            <span class="control-desc">Dig up a plant</span>
+          </div>
+          <div class="control-line">
+            <span class="control-key">1 / 2 / 3</span>
+            <span class="control-desc">Switch seed quickly</span>
+          </div>
+          <div class="control-line">
+            <span class="control-key">Mouse Wheel</span>
+            <span class="control-desc">Cycle seeds and zoom</span>
+          </div>
+          <div class="control-line">
+            <span class="control-key">Middle Mouse</span>
+            <span class="control-desc">Scare weak zombies</span>
+          </div>
+          <div class="control-line">
+            <span class="control-key">ESC / M</span>
+            <span class="control-desc">Pause or mute sound</span>
+          </div>
+          <p class="sidebar-note">Sun is collected automatically when your mouse gets close to it.</p>
         </div>
-        <div class="control-line">
-          <span class="control-key">Right Click</span>
-          <span class="control-desc">Dig up a plant</span>
-        </div>
-        <div class="control-line">
-          <span class="control-key">1 / 2 / 3</span>
-          <span class="control-desc">Switch seed quickly</span>
-        </div>
-        <div class="control-line">
-          <span class="control-key">Mouse Wheel</span>
-          <span class="control-desc">Cycle seeds and zoom</span>
-        </div>
-        <div class="control-line">
-          <span class="control-key">Middle Mouse</span>
-          <span class="control-desc">Scare weak zombies</span>
-        </div>
-        <div class="control-line">
-          <span class="control-key">ESC / M</span>
-          <span class="control-desc">Pause or mute sound</span>
-        </div>
-        <p class="sidebar-note">Sun is collected automatically when your mouse gets close to it.</p>
-      </div>
 
-      <div class="sidebar-card sound-card">
-        <button id="muteButton" class="secondary-button">Sound: On</button>
-      </div>
-    </aside>
+      </aside>
+    </div>
 
     <section id="menuOverlay" class="overlay visible">
       <div class="panel hero-panel">
-        <p class="eyebrow">Premium Canvas Lane Defense</p>
-        <h1>Garden Last Stand</h1>
-        <p>Command a cinematic garden defense with stronger visuals, reactive UI, deeper feedback, and zombies driven by a reusable finite state machine.</p>
-        <button id="playButton" class="primary-button">Play Game</button>
-        <p class="hint">Zombie FSM states: SPAWN, WALK, TARGET, EAT, RAGE, FLEE, DEAD, RESPAWN.</p>
+        <div class="menu-stack">
+          <div id="menuMainView" class="menu-view">
+            <p class="eyebrow">Premium Canvas Lane Defense</p>
+            <h1>Garden Last Stand</h1>
+            <p>Command a cinematic garden defense with stronger visuals, reactive UI, deeper feedback, and zombies driven by a reusable finite state machine.</p>
+            <div class="difficulty-group">
+              <p class="sidebar-title">Difficulty</p>
+              <div class="difficulty-actions">
+                <button class="difficulty-button" data-difficulty="easy">Easy</button>
+                <button class="difficulty-button active" data-difficulty="normal">Normal</button>
+                <button class="difficulty-button" data-difficulty="hard">Hard</button>
+              </div>
+            </div>
+            <div class="menu-actions">
+              <button id="playButton" class="primary-button">Play Game</button>
+              <button id="howToButton" class="secondary-button">How to Play</button>
+            </div>
+            <p class="hint">Zombie FSM states: SPAWN, WALK, TARGET, EAT, RAGE, FLEE, DEAD, RESPAWN.</p>
+          </div>
+
+          <div id="menuHowToView" class="menu-view is-hidden">
+            <p class="eyebrow">Controls Guide</p>
+            <h2>How to Play</h2>
+            <div class="howto-list">
+              <div class="control-line"><span class="control-key">Left Click</span><span class="control-desc">Plant on a tile</span></div>
+              <div class="control-line"><span class="control-key">Right Click</span><span class="control-desc">Dig up a plant</span></div>
+              <div class="control-line"><span class="control-key">1 / 2 / 3</span><span class="control-desc">Switch seed quickly</span></div>
+              <div class="control-line"><span class="control-key">Mouse Wheel</span><span class="control-desc">Cycle seeds and zoom</span></div>
+              <div class="control-line"><span class="control-key">Middle Mouse</span><span class="control-desc">Scare weak zombies</span></div>
+              <div class="control-line"><span class="control-key">ESC</span><span class="control-desc">Pause menu</span></div>
+            </div>
+            <button id="howToBackButton" class="primary-button">Back</button>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -127,6 +155,9 @@
         <p class="eyebrow">Game Paused</p>
         <h2>Defense On Hold</h2>
         <p>Take a breath, review the lanes, then jump back in.</p>
+        <div id="pauseControlsSlot" class="pause-controls-slot"></div>
+        <button id="pauseMuteButton" class="secondary-button">Sound: On</button>
+        <button id="pauseRestartButton" class="secondary-button">Restart to Menu</button>
         <button id="resumeButton" class="primary-button">Resume</button>
       </div>
     </section>

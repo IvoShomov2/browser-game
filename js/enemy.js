@@ -1,14 +1,32 @@
-﻿class Enemy {
-  constructor(lane, level, canvasWidth) {
+class Enemy {
+  static nextId = 1;
+
+  constructor(lane, level, canvasWidth, difficultySettings = null) {
+    this.id = Enemy.nextId++;
     this.lane = lane;
     this.level = level;
     this.width = 58;
     this.height = 92;
     this.x = canvasWidth + 90 + Math.random() * 180;
     this.y = 0;
-    this.baseSpeed = 21 + level * 1.9 + Math.random() * 7;
+    this.renderX = this.x;
+    this.renderY = 0;
+    this.animState = "walking";
+    this.animTime = Math.random() * Math.PI * 2;
+    this.lifeSeed = Math.random() * Math.PI * 2;
+    this.swayAmplitude = 0.9 + Math.random() * 1.8;
+    this.bobAmplitude = 0.8 + Math.random() * 1.6;
+    this.tiltAmplitude = 0.35 + Math.random() * 0.8;
+    this.easeSpeed = 10 + Math.random() * 5;
+    this.bobDuration = 0.54 + Math.random() * 0.2;
+    this.visualOffsetX = 0;
+    this.visualOffsetY = 0;
+    this.visualRotate = 0;
+    this.visualScale = 1;
+    const speedMultiplier = difficultySettings && typeof difficultySettings.zombieSpeed === "number" ? difficultySettings.zombieSpeed : 1;
+    this.baseSpeed = (21 + level * 1.9 + Math.random() * 7) * speedMultiplier;
     this.speedMultiplier = 1;
-    this.health = 120 + level * 20;
+    this.health = difficultySettings && typeof difficultySettings.zombieHealth === "number" ? difficultySettings.zombieHealth : (120 + level * 20);
     this.maxHealth = this.health;
     this.biteDamage = 18 + level * 1.8;
     this.biteCooldown = 0;
@@ -179,8 +197,23 @@
   update(game, deltaTime) {
     this.y = game.getLaneCenter(this.lane);
     this.hitFlash = Math.max(0, this.hitFlash - deltaTime);
-    this.walkCycle += deltaTime * (this.baseSpeed * this.speedMultiplier * 0.06 + 3.6);
     this.fsm.update(game, deltaTime);
+
+    const isWalkingState = this.fsm.matches("SPAWN") || this.fsm.matches("WALK") || this.fsm.matches("RAGE") || this.fsm.matches("FLEE") || this.fsm.matches("RESPAWN");
+    this.animState = isWalkingState ? "walking" : "idle";
+    this.animTime += deltaTime * (isWalkingState ? 7.2 : 2.2);
+
+    const pace = this.animState === "walking" ? 1 : 0.28;
+    const wobbleTime = this.animTime + this.lifeSeed + performance.now() * 0.00035;
+    this.visualOffsetX = Math.sin(wobbleTime * 2.4) * this.swayAmplitude * pace;
+    this.visualOffsetY = Math.cos(wobbleTime * 3.2) * this.bobAmplitude * pace;
+    this.visualRotate = Math.sin(wobbleTime * 1.7) * this.tiltAmplitude * pace;
+    this.visualScale = 1 + Math.sin(wobbleTime * 1.15) * 0.008 * pace;
+
+    // Exponential easing gives smooth, frame-rate independent interpolation.
+    const smoothing = 1 - Math.exp(-this.easeSpeed * deltaTime);
+    this.renderX += (this.x - this.renderX) * smoothing;
+    this.renderY += (this.y - this.renderY) * smoothing;
   }
 
   moveBy(speed, deltaTime) {
@@ -216,17 +249,21 @@
 
   draw(ctx) {
     const isGhosted = this.fsm.matches("DEAD");
-    const armSwing = Math.sin(this.walkCycle) * 10;
-    const forearmSwing = Math.sin(this.walkCycle + 0.7) * 7;
-    const legSwing = Math.sin(this.walkCycle + Math.PI) * 8;
-    const footDrag = Math.cos(this.walkCycle) * 4;
-    const headTilt = Math.sin(this.walkCycle * 0.65) * 0.08;
+    const now = Date.now() * 0.001;
+    const pace = this.animState === "walking" ? 1 : 0.28;
+    const swingTime = this.animTime + now * 0.8;
+    const armSwing = Math.sin(swingTime * 2.1) * (10 * pace);
+    const forearmSwing = Math.sin(swingTime * 2.1 + 0.7) * (7 * pace);
+    const legSwing = Math.sin(swingTime * 2.1 + Math.PI) * (8 * pace);
+    const footDrag = Math.cos(swingTime * 2.1) * (4 * pace);
+    const headTilt = Math.sin(swingTime * 1.2) * (0.08 * pace + 0.02);
     const bodyLean = this.fsm.matches("RAGE") ? -0.18 : this.fsm.matches("FLEE") ? 0.08 : -0.12;
-    const bodyBob = Math.sin(this.walkCycle * 2) * 2;
+    const bodyBob = Math.sin(swingTime * 3.2) * (this.animState === "walking" ? 3.1 : 1.1);
     const jacket = this.fsm.matches("RAGE") ? "#7d3926" : this.jacket;
+    const lifeScale = 1 + Math.sin(swingTime * 1.05) * (this.animState === "walking" ? 0.012 : 0.006);
 
     ctx.save();
-    ctx.translate(this.x, this.y + bodyBob);
+    ctx.translate(this.renderX, this.renderY + bodyBob);
     ctx.globalAlpha = isGhosted ? 0.28 : 1;
 
     ctx.fillStyle = "rgba(0,0,0,0.22)";
@@ -243,6 +280,7 @@
 
     ctx.save();
     ctx.rotate(bodyLean);
+    ctx.scale(lifeScale, lifeScale);
 
     ctx.strokeStyle = this.skinTone;
     ctx.lineCap = "round";
@@ -382,3 +420,4 @@
 }
 
 window.Enemy = Enemy;
+

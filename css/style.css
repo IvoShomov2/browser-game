@@ -1,4 +1,8 @@
-﻿:root {
+:root {
+  --ui-scale: 1;
+  --edge-gap: clamp(0.75rem, 1.5vw, 1.5rem);
+  --sidebar-width: clamp(15rem, 20vw, 18.5rem);
+  --hud-max: 60rem;
   --ink: #23170d;
   --cream: #fff6df;
   --paper: #e8d2a7;
@@ -18,14 +22,19 @@
   padding: 0;
 }
 
+html,
 body {
+  width: 100%;
+  height: 100%;
   min-height: 100vh;
+  min-height: 100dvh;
   overflow: hidden;
   color: var(--ink);
   background:
     radial-gradient(circle at top, rgba(255, 252, 242, 0.82), transparent 34%),
     linear-gradient(180deg, #b5def7 0%, #e8efbd 24%, #b8d66a 49%, #7fa94a 72%, #678743 100%);
   font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+  font-size: clamp(14px, 0.7vw + 0.45rem, 16px);
 }
 
 button {
@@ -36,32 +45,104 @@ button {
   position: relative;
   width: 100vw;
   height: 100vh;
+  overflow: hidden;
+  isolation: isolate;
   background:
     linear-gradient(180deg, rgba(255,255,255,0.12), rgba(0,0,0,0.04));
 }
 
 #gameCanvas {
+  position: absolute;
+  inset: 0;
   display: block;
   width: 100%;
   height: 100%;
+  z-index: 1;
 }
 
-#hud {
+#entityLayer {
   position: absolute;
-  top: 16px;
-  left: 20px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  max-width: min(920px, calc(100vw - 352px));
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.entity-sprite {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+}
+
+.entity-sprite img {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: auto;
+  max-width: 100%;
+  max-height: 80%;
+  transform: translateX(-50%);
+  transform-origin: 50% 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.34));
+  will-change: transform, filter;
+}
+
+.entity-sprite.plant img {
+  animation: plant-idle 2.2s ease-in-out infinite;
+}
+
+.entity-sprite.zombie img {
+  animation: zombie-bob var(--bob-duration, 0.62s) ease-in-out infinite alternate;
+}
+
+.entity-sprite.zombie.is-hit img {
+  filter: drop-shadow(0 10px 12px rgba(0, 0, 0, 0.38)) brightness(1.2);
+}
+
+@keyframes plant-idle {
+  0% { transform: translateX(-50%) translateY(0) scale(0.985); }
+  50% { transform: translateX(-50%) translateY(-4px) scale(1.02); }
+  100% { transform: translateX(-50%) translateY(0) scale(0.985); }
+}
+
+@keyframes zombie-bob {
+  0% { transform: translateX(-50%) translateY(0) rotate(calc(var(--bob-rot, 0.8deg) * -1)) scale(1); }
+  100% { transform: translateX(-50%) translateY(var(--bob-y, -3px)) rotate(var(--bob-rot, 0.8deg)) scale(var(--bob-scale, 1.01)); }
+}
+
+#uiShell {
+  position: absolute;
+  inset: var(--edge-gap);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--sidebar-width);
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-areas:
+    "hud sidebar"
+    ". sidebar";
+  gap: clamp(0.65rem, 1.2vw, 1rem);
+  font-size: calc(1rem * var(--ui-scale));
+  pointer-events: none;
   z-index: 5;
 }
 
+#hud {
+  grid-area: hud;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: clamp(0.42rem, 0.85vw, 0.7rem);
+  max-width: min(var(--hud-max), 100%);
+  pointer-events: auto;
+}
+
 .hud-group {
-  min-width: 102px;
-  padding: 7px 12px 9px;
+  min-width: clamp(5.4rem, 7.6vw, 6.8rem);
+  padding: clamp(0.36rem, 0.6vw, 0.5rem) clamp(0.55rem, 0.95vw, 0.8rem);
   border: 2px solid rgba(80, 54, 27, 0.78);
-  border-radius: 18px;
+  border-radius: 1rem;
   color: #2c2015;
   background:
     linear-gradient(180deg, rgba(238, 244, 233, 0.94), rgba(158, 183, 186, 0.96));
@@ -80,24 +161,22 @@ button {
 
 .hud-group strong {
   display: block;
-  margin-top: 4px;
-  font-size: 1.02rem;
+  margin-top: 0.2rem;
+  font-size: clamp(0.88rem, 0.85vw, 1rem);
   color: #2f261a;
 }
 
 #sidebar {
-  position: absolute;
-  top: 14px;
-  right: 14px;
+  grid-area: sidebar;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  width: min(252px, calc(100vw - 28px));
-  max-height: calc(100vh - 28px);
+  gap: clamp(0.55rem, 1vw, 0.75rem);
+  width: 100%;
+  max-height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
-  padding-right: 4px;
-  z-index: 5;
+  padding-right: 0.25rem;
+  pointer-events: auto;
   scrollbar-width: thin;
   scrollbar-color: rgba(76, 51, 28, 0.5) transparent;
 }
@@ -113,16 +192,24 @@ button {
 
 .sidebar-card {
   position: relative;
-  padding: 14px;
+  padding: clamp(0.72rem, 1vw, 0.9rem);
   border: 3px solid #5a3d20;
   border-radius: 20px;
   color: #352516;
   background:
-    radial-gradient(circle at top, rgba(255, 243, 214, 0.7), transparent 36%),
+    repeating-linear-gradient(
+      125deg,
+      rgba(255, 246, 224, 0.16) 0,
+      rgba(255, 246, 224, 0.16) 4px,
+      rgba(166, 123, 65, 0.08) 4px,
+      rgba(166, 123, 65, 0.08) 8px
+    ),
+    radial-gradient(circle at top, rgba(255, 243, 214, 0.74), transparent 36%),
     linear-gradient(180deg, rgba(233, 209, 161, 0.98), rgba(191, 154, 95, 0.98));
   box-shadow:
     inset 0 0 0 2px rgba(255, 246, 227, 0.38),
     0 10px 24px rgba(27, 19, 11, 0.28);
+  transition: transform 220ms ease, box-shadow 220ms ease;
 }
 
 .sidebar-card::before {
@@ -132,6 +219,13 @@ button {
   border: 1px solid rgba(92, 61, 32, 0.28);
   border-radius: 14px;
   pointer-events: none;
+}
+
+.sidebar-card:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 246, 227, 0.38),
+    0 14px 28px rgba(27, 19, 11, 0.32);
 }
 
 .brand-card {
@@ -246,7 +340,7 @@ button {
   color: #fff8e4;
   border: 2px solid rgba(91, 61, 31, 0.78);
   background: linear-gradient(180deg, rgba(92, 111, 44, 0.98), rgba(60, 78, 30, 0.98));
-  box-shadow: inset 0 0 0 1px rgba(255, 241, 211, 0.12);
+  box-shadow: inset 0 0 0 1px rgba(255, 241, 211, 0.12), 0 6px 14px rgba(31, 48, 15, 0.28);
 }
 
 .seed-button + .seed-button {
@@ -281,7 +375,13 @@ button {
 
 .seed-button.active {
   background: linear-gradient(180deg, rgba(134, 163, 63, 0.98), rgba(82, 109, 36, 0.98));
-  box-shadow: 0 10px 20px rgba(53, 73, 23, 0.28);
+  box-shadow: 0 10px 20px rgba(53, 73, 23, 0.28), 0 0 0 2px rgba(211, 255, 157, 0.26);
+}
+
+.seed-button:active,
+.primary-button:active,
+.secondary-button:active {
+  transform: translateY(0) scale(0.97);
 }
 
 .seed-button.disabled {
@@ -301,6 +401,10 @@ button {
   box-shadow: 0 10px 20px rgba(52, 100, 24, 0.28);
 }
 
+.primary-button:hover {
+  box-shadow: 0 14px 24px rgba(52, 100, 24, 0.35), 0 0 18px rgba(139, 231, 83, 0.24);
+}
+
 .secondary-button {
   color: #fff7e2;
   background: linear-gradient(180deg, rgba(141, 104, 42, 0.95), rgba(89, 61, 24, 0.95));
@@ -310,23 +414,34 @@ button {
 .overlay {
   position: absolute;
   inset: 0;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
+  display: block;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  padding: var(--edge-gap);
   background: linear-gradient(180deg, rgba(21, 17, 10, 0.24), rgba(21, 17, 10, 0.74));
+  backdrop-filter: blur(3px);
+  transition: opacity 220ms ease, visibility 220ms ease;
   z-index: 10;
 }
 
 .overlay.visible {
-  display: flex;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
 }
 
 .panel {
-  width: min(680px, 100%);
-  padding: 38px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(42rem, calc(100vw - (var(--edge-gap) * 2)));
+  max-height: calc(100vh - (var(--edge-gap) * 2));
+  overflow-y: auto;
+  padding: clamp(1.3rem, 2.2vw, 2.3rem);
   border: 3px solid #5d3f22;
-  border-radius: 30px;
+  border-radius: 1.7rem;
   text-align: center;
   color: #fff5dc;
   background:
@@ -336,7 +451,97 @@ button {
 }
 
 .hero-panel {
-  max-width: 700px;
+  width: min(44rem, calc(100vw - (var(--edge-gap) * 2)));
+}
+
+.menu-stack {
+  position: relative;
+  min-height: 24rem;
+}
+
+.menu-view {
+  transition: opacity 220ms ease, transform 220ms ease;
+}
+
+.menu-view.is-hidden {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(10px);
+}
+
+.menu-actions {
+  display: grid;
+  gap: 0.65rem;
+  margin: 0.85rem 0;
+}
+
+.difficulty-group {
+  margin: 0.65rem 0 0.5rem;
+  text-align: left;
+}
+
+.difficulty-group .sidebar-title {
+  color: rgba(244, 232, 201, 0.92);
+}
+
+.difficulty-actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.45rem;
+}
+
+.difficulty-button {
+  border: 2px solid rgba(219, 235, 181, 0.42);
+  border-radius: 999px;
+  padding: 0.48rem 0.68rem;
+  color: #eef6d8;
+  background: linear-gradient(180deg, rgba(53, 88, 41, 0.86), rgba(34, 57, 26, 0.86));
+  cursor: pointer;
+  transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
+}
+
+.difficulty-button:hover {
+  transform: translateY(-1px);
+}
+
+.difficulty-button.active {
+  border-color: rgba(242, 252, 184, 0.86);
+  background: linear-gradient(180deg, rgba(123, 165, 61, 0.95), rgba(73, 101, 33, 0.95));
+  box-shadow: 0 0 0 2px rgba(221, 255, 165, 0.26);
+}
+
+.howto-list {
+  margin: 0.8rem 0;
+  text-align: left;
+}
+
+#menuOverlay .control-line {
+  border-color: rgba(229, 236, 214, 0.16);
+}
+
+#menuOverlay .control-key {
+  color: #f0f7db;
+  border-color: rgba(229, 236, 214, 0.36);
+  background: linear-gradient(180deg, rgba(58, 92, 44, 0.8), rgba(33, 59, 25, 0.8));
+}
+
+#menuOverlay .control-desc {
+  color: #f3e7ca;
+}
+
+.pause-controls-slot {
+  margin: 0.8rem 0;
+}
+
+#pauseOverlay .controls-card {
+  margin-bottom: 0.8rem;
+  text-align: left;
+}
+
+#pauseOverlay .secondary-button {
+  margin-bottom: 0.75rem;
 }
 
 .eyebrow {
@@ -378,20 +583,25 @@ button {
 }
 
 @media (max-width: 980px) {
-  #hud {
-    max-width: calc(100vw - 36px);
+  #uiShell {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, auto);
+    grid-template-areas:
+      "hud"
+      "sidebar";
+    align-content: start;
   }
 
   #sidebar {
-    top: auto;
-    bottom: 18px;
-    width: calc(100vw - 36px);
-    max-width: none;
-    max-height: min(42vh, 360px);
+    max-height: min(45vh, 24rem);
   }
 }
 
 @media (max-height: 860px) {
+  #uiShell {
+    --sidebar-width: clamp(14rem, 19vw, 17rem);
+  }
+
   #sidebar {
     gap: 10px;
   }
@@ -406,13 +616,9 @@ button {
 }
 
 @media (max-width: 640px) {
-  #hud {
-    gap: 8px;
-  }
-
   .hud-group {
-    min-width: 84px;
-    padding: 7px 10px 8px;
+    min-width: clamp(4.75rem, 26vw, 6rem);
+    padding: 0.4rem 0.55rem;
   }
 
   .sidebar-card {
@@ -432,4 +638,6 @@ button {
     flex-basis: auto;
   }
 }
+
+
 

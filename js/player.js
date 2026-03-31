@@ -1,5 +1,8 @@
-﻿class Plant {
+class Plant {
+  static nextId = 1;
+
   constructor(col, row, config) {
+    this.id = Plant.nextId++;
     this.col = col;
     this.row = row;
     this.type = config.type;
@@ -20,6 +23,26 @@
     this.bobSpeed = 3 + Math.random() * 2;
     this.recoil = 0;
     this.expression = Math.random() * Math.PI * 2;
+  }
+
+  getSprite(game) {
+    if (!Plant.spriteCache) Plant.spriteCache = new Map();
+    const spriteWidth = Math.max(84, Math.round(game.cellWidth * 1.36));
+    const spriteHeight = Math.max(100, Math.round(game.cellHeight * 1.56));
+    const key = `${this.type}:${spriteWidth}x${spriteHeight}`;
+    if (!Plant.spriteCache.has(key)) {
+      const spriteCanvas = document.createElement("canvas");
+      spriteCanvas.width = spriteWidth;
+      spriteCanvas.height = spriteHeight;
+      const sctx = spriteCanvas.getContext("2d");
+      sctx.translate(spriteWidth * 0.5, spriteHeight * 0.69);
+      const fakeGame = { cellWidth: spriteWidth * 0.62, cellHeight: spriteHeight * 0.62 };
+      if (this.type === "peashooter") this.drawPeashooter(sctx, fakeGame);
+      if (this.type === "sunflower") this.drawSunflower(sctx);
+      if (this.type === "wallnut") this.drawWallnut(sctx, fakeGame);
+      Plant.spriteCache.set(key, spriteCanvas);
+    }
+    return Plant.spriteCache.get(key);
   }
 
   update(game, deltaTime) {
@@ -107,16 +130,24 @@
     ctx.scale(scale, scale);
     ctx.rotate(tilt);
 
-    if (this.type === "peashooter") {
+    const sprite = this.getSprite(game);
+    if (sprite) {
+      const spritePulse = 1 + Math.sin(game.totalTime * 2.8 + this.variant) * 0.015;
+      ctx.scale(spritePulse, spritePulse);
+      ctx.drawImage(sprite, -sprite.width / 2, -sprite.height * 0.69);
+    } else if (this.type === "peashooter") {
       this.drawPeashooter(ctx, game);
-    }
-
-    if (this.type === "sunflower") {
+    } else if (this.type === "sunflower") {
       this.drawSunflower(ctx);
+    } else if (this.type === "wallnut") {
+      this.drawWallnut(ctx, game);
     }
 
-    if (this.type === "wallnut") {
-      this.drawWallnut(ctx, game);
+    if (this.type === "peashooter" && this.recoil > 0.08) {
+      ctx.fillStyle = `rgba(212,255,173, ${this.recoil * 0.7})`;
+      ctx.beginPath();
+      ctx.arc(50, -18, 9 + this.recoil * 10, 0, Math.PI * 2);
+      ctx.fill();
     }
 
     ctx.restore();
@@ -312,6 +343,8 @@ class Projectile {
   constructor(x, y, lane, damage) {
     this.x = x;
     this.y = y;
+    this.renderX = x;
+    this.renderY = y;
     this.lane = lane;
     this.damage = damage;
     this.radius = 8;
@@ -322,9 +355,15 @@ class Projectile {
   }
 
   update(game, deltaTime) {
-    this.trail.push({ x: this.x, y: this.y, age: 1 });
-    this.trail = this.trail.slice(-8).map((point) => ({ ...point, age: point.age - 0.12 }));
+    this.trail.push({ x: this.renderX, y: this.renderY, age: 1 });
+    this.trail = this.trail
+      .slice(-12)
+      .map((point) => ({ ...point, age: point.age - deltaTime * 3.4 }))
+      .filter((point) => point.age > 0);
     this.x += this.speed * deltaTime;
+    const smoothing = Math.min(1, deltaTime * 20);
+    this.renderX += (this.x - this.renderX) * smoothing;
+    this.renderY += (this.y - this.renderY) * smoothing;
     this.spin += deltaTime * 10;
 
     const target = game.findProjectileTarget(this);
@@ -359,7 +398,7 @@ class Projectile {
     });
 
     ctx.save();
-    ctx.translate(this.x, this.y);
+    ctx.translate(this.renderX, this.renderY);
     const glow = ctx.createRadialGradient(0, 0, 2, 0, 0, this.radius + 18);
     glow.addColorStop(0, "rgba(239,255,165,0.95)");
     glow.addColorStop(0.3, "rgba(189,255,93,0.8)");
@@ -370,7 +409,7 @@ class Projectile {
     ctx.fill();
     ctx.restore();
 
-    ctx.translate(this.x, this.y);
+    ctx.translate(this.renderX, this.renderY);
     ctx.rotate(this.spin);
     const gradient = ctx.createRadialGradient(-2, -2, 2, 0, 0, this.radius + 2);
     gradient.addColorStop(0, "#f4ffbf");
@@ -401,6 +440,7 @@ class SunToken {
     this.life = drifting ? 8.5 : 10;
     this.floatOffset = Math.random() * Math.PI * 2;
     this.vy = drifting ? 20 + Math.random() * 20 : 0;
+    this.vx = drifting ? -8 + Math.random() * 16 : 0;
     this.active = true;
     this.collectRadius = 52;
   }
@@ -409,6 +449,7 @@ class SunToken {
     this.age += deltaTime;
     if (this.drifting) {
       this.y += this.vy * deltaTime;
+      this.x += this.vx * deltaTime;
     }
 
     if (this.age > this.life) {
@@ -426,10 +467,13 @@ class SunToken {
 
   draw(ctx, totalTime) {
     const pulse = Math.sin(totalTime * 4 + this.floatOffset) * 3;
+    const sway = Math.cos(totalTime * 2.8 + this.floatOffset) * 4;
+    const tokenScale = 1 + Math.sin(totalTime * 3.6 + this.floatOffset) * 0.05;
     const glowSize = this.radius + 18 + Math.sin(totalTime * 5 + this.floatOffset) * 5;
 
     ctx.save();
-    ctx.translate(this.x, this.y + pulse);
+    ctx.translate(this.x + sway, this.y + pulse);
+    ctx.scale(tokenScale, tokenScale);
 
     const outerGlow = ctx.createRadialGradient(0, 0, 2, 0, 0, glowSize);
     outerGlow.addColorStop(0, "rgba(255, 247, 178, 0.95)");
@@ -470,3 +514,5 @@ class SunToken {
 window.Plant = Plant;
 window.Projectile = Projectile;
 window.SunToken = SunToken;
+
+
