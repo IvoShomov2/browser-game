@@ -65,9 +65,3 @@ Sun is collected automatically when your cursor moves close to it.
 - [js/fsm.js](/C:/Users/User/Documents/GitHub/browser-game/js/fsm.js): reusable finite state machine implementation
 - `assets/`: plant, zombie, and audio assets
 - `docs/`: supporting documentation
-
-## Enemy State Diagram
-
-The zombie behavior is organized with a finite state machine.
-
-![Game state diagram](docs/state-diagram.png)
